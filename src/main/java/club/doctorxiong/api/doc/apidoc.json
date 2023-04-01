@@ -1,0 +1,7 @@
+{
+  "name": "金融数据接口文档",
+  "version": "0.1.0",
+  "description": "可以获取国内的基金,股票的详细信息和历史信息",
+  "title": "金融数据接口",
+  "url" : "https://api.doctorxiong.club"
+}

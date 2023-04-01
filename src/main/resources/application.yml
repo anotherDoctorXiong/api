@@ -1,0 +1,49 @@
+server:
+  servlet:
+    context-path: /v1
+  port: 8080
+
+spring:
+  application:
+    name: doctorxiong-club-api
+  mail:
+    # 邮件服务地址
+    host: smtp.163.com
+    # 编码格式
+    default-encoding: utf-8
+    # 用户名
+    username: 18507009692@163.com
+    # 授权码
+    password: KKEJGLFJSBUMGJXS
+    # 更改端口
+    port: 465
+    properties.mail.smtp.socketFactory.class: javax.net.ssl.SSLSocketFactory
+
+  jackson:
+    date-format: yyyy-MM-dd
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+  datasource:
+    druid:
+      stat-view-servlet:
+        loginUsername: admin
+        loginPassword: 123456
+        url-pattern: /druid/*
+      username: root
+      password: Root_123456
+      url: jdbc:mysql://127.0.0.1:3306/miniprogress?serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useSSL=false
+      # 初始化时连接池连接数量
+      initial-size: 5
+      # 最大连接数
+      max-active: 20
+      # 连接池最小连接数量
+      min-idle: 0
+      # 取连接前是否测试连接是否有效,通过validation-query方式
+      test-on-borrow: false
+      validation-query: select version();
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    timeout: 5000
+    database: 1
+    password: 592802622

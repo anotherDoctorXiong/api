@@ -1,0 +1,16 @@
+#防止注册成同一个服务，影响dev，本地自测时，在name后面加上自己的名字，如demo-service-local-zhongshenghua，修改后的名字请勿提交
+spring.application.name: doctorxiong-club-api-prod
+
+
+spring:
+    jackson:
+      date-format: yyyy-MM-dd
+      time-zone: GMT+8
+      default-property-inclusion: non_null
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      timeout: 5000
+      database: 0
+      password: 592802622
+
