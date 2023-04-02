@@ -4,6 +4,7 @@ package club.doctorxiong.api.controller.v1;
 import club.doctorxiong.api.common.CommonResponse;
 import club.doctorxiong.api.common.RedisKeyConstants;
 import club.doctorxiong.api.common.dto.ConvertBondDTO;
+import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.dto.IndustryDetailDTO;
 import club.doctorxiong.api.common.dto.StockDTO;
 import club.doctorxiong.api.common.page.PageRequest;
@@ -11,6 +12,8 @@ import club.doctorxiong.api.component.CommonDataComponent;
 import club.doctorxiong.api.service.StockService;
 import club.doctorxiong.api.common.request.StockRankRequest;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -22,6 +25,7 @@ import club.doctorxiong.api.common.page.PageData;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static club.doctorxiong.api.component.CommonDataComponent.convertBondList;
 

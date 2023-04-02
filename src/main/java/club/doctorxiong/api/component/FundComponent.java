@@ -11,6 +11,9 @@ import club.doctorxiong.api.uitls.StringUtil;
 import club.doctorxiong.api.uitls.UrlUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import org.jsoup.Jsoup;
@@ -24,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static club.doctorxiong.api.common.LocalDateTimeFormatter.getLocalDateTimeByTimestamp;
 
@@ -41,6 +45,36 @@ public class FundComponent {
 
     @Autowired
     private FillFundDetailFactoryService fillFundDetail;
+
+    LoadingCache<String, String> FundDetailCache = Caffeine.newBuilder()
+            .expireAfter(new Expiry<String, String>() {
+                @Override
+                public long expireAfterCreate(String key, String value, long currentTime) {
+                    // 对于 key 为 "foo" 的条目，设置过期时间为 10 秒
+                    if ("foo".equals(key)) {
+                        return TimeUnit.SECONDS.toNanos(10);
+                    }
+                    // 对于其他条目，使用默认过期时间
+                    return Long.MAX_VALUE;
+                }
+
+                @Override
+                public long expireAfterUpdate(String key, String value, long currentTime, long currentDuration) {
+                    // 对于 key 为 "bar" 的条目，设置过期时间为 5 秒
+                    if ("bar".equals(key)) {
+                        return TimeUnit.SECONDS.toNanos(5);
+                    }
+                    // 对于其他条目，使用默认过期时间
+                    return currentDuration;
+                }
+
+                @Override
+                public long expireAfterRead(String key, String value, long currentTime, long currentDuration) {
+                    // 不使用读取过期
+                    return currentDuration;
+                }
+            })
+            .build(key -> "value");
 
 
     /**
