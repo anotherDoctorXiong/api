@@ -94,6 +94,11 @@ public class StockController {
         return CommonResponse.OK(stockService.getStockRank(request));
     }
 
+    @RequestMapping(value = "/board", method = RequestMethod.GET)
+    public CommonResponse<List<StockDTO>> getBoard() {
+        return CommonResponse.OK(stockService.getStockList("sh000001,sz399300,sh000905,sz399001,sz399005,sz399006"));
+    }
+
     @RequestMapping(value = "/industry/rank", method = RequestMethod.GET)
     public CommonResponse<List<IndustryDetailDTO>> IndustryRank() {
         return CommonResponse.OK(stockService.getIndustryRank());
