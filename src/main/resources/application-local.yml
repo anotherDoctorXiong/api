@@ -44,8 +44,6 @@ spring:
       test-on-borrow: false
       validation-query: select version();
   redis:
-    host: 8.135.117.119
+    host: 127.0.0.1
     port: 6379
-    timeout: 5000
-    database: 1
-    password: 592802622
+    password: 123456
