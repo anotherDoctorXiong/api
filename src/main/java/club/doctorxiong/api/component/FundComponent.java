@@ -64,15 +64,16 @@ public class FundComponent {
     LoadingCache<String, FundExpectDataDTO> fundExpectCache = Caffeine.newBuilder().expireAfter(new Expiry<String, FundExpectDataDTO>() {
         @Override
         public long expireAfterCreate(String key, FundExpectDataDTO fundExpectDataDTO, long currentTime) {
+            currentTime = System.currentTimeMillis()/1000;
             LocalDate date = LocalDate.now();
             DayOfWeek dayOfWeek = date.getDayOfWeek();
             if(dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY){
-                return TimeUnit.MILLISECONDS.toNanos(timestampOfDayEnd - currentTime);
+                return TimeUnit.SECONDS.toNanos(timestampOfDayEnd - currentTime);
             }
             // 未开盘缓存至开盘
             if(currentTime < timestampOfOpenAM){
                 log.info(key + "-fundExpectCache缓存至开盘");
-                return TimeUnit.MILLISECONDS.toNanos(timestampOfOpenAM - currentTime);
+                return TimeUnit.SECONDS.toNanos(timestampOfOpenAM - currentTime);
             }
             if(currentTime < timestampOfClosePM){
                 log.info(key + "fundExpectCache缓存一分钟");
@@ -80,7 +81,7 @@ public class FundComponent {
             }
             if(currentTime - timestampOfClosePM > TimeUnit.MINUTES.toNanos(1) && fundExpectDataDTO.getExpectWorthDate() != null){
                 log.info(key + "-fundExpectCache缓存至今天结束");
-                return TimeUnit.MILLISECONDS.toNanos(timestampOfDayEnd - currentTime);
+                return TimeUnit.SECONDS.toNanos(timestampOfDayEnd - currentTime);
             }
             log.info(key + "-fundExpectCache缓存五分钟");
             return TimeUnit.MINUTES.toNanos(5); // 设置缓存过期时间为5分钟
@@ -118,32 +119,31 @@ public class FundComponent {
     });
 
 
-    LoadingCache<String, FundDTO> fundCache = Caffeine.newBuilder()
-            .refreshAfterWrite(5, TimeUnit.SECONDS)
-            .expireAfter(new Expiry<String, FundDTO>() {
+    LoadingCache<String, FundDTO> fundCache = Caffeine.newBuilder().expireAfter(new Expiry<String, FundDTO>() {
         @Override
         public long expireAfterCreate(String key, FundDTO fundDTODetail, long currentTime) {
+            currentTime = System.currentTimeMillis()/1000;
             LocalDate date = LocalDate.now();
             DayOfWeek dayOfWeek = date.getDayOfWeek();
             if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-                return TimeUnit.MILLISECONDS.toNanos(timestampOfDayEnd - currentTime);
+                return TimeUnit.SECONDS.toNanos(timestampOfDayEnd - currentTime);
             }
-            long random = (System.currentTimeMillis() % 3600 + 1800) * 1000;
+            long random = System.nanoTime() % 3600 + 1800;
             if (fundDTODetail.getNetWorthDate() == null && fundDTODetail.getMillionCopiesIncomeDate() == null) {
                 log.info(key + "-fundCache新发售基金或者无效基金缓存至今天结束");
-                return TimeUnit.MILLISECONDS.toNanos(timestampOfDayEnd - currentTime);
+                return TimeUnit.SECONDS.toNanos(timestampOfDayEnd - currentTime);
             }
             // 不到收盘不会更新
             if (currentTime < timestampOfClosePM && fundDTODetail.getCode() != null) {
                 log.info(key + "-fundCache缓存至收盘");
-                return TimeUnit.MILLISECONDS.toNanos(timestampOfDayEnd - currentTime + random);
+                return TimeUnit.SECONDS.toNanos(timestampOfDayEnd - currentTime + random);
             }
             if (fundDTODetail.getNetWorthDate() != null && fundDTODetail.getNetWorthDate().isEqual(LocalDate.now())) {
                 log.info(key + "-fundCache今日数据已更新 缓存至明日收盘");
                 return TimeUnit.HOURS.toNanos(15);
             }
             log.info(key + "-fundCache随机缓存");
-            return TimeUnit.MILLISECONDS.toNanos(random); // 设置缓存过期再随机加个后缀
+            return TimeUnit.SECONDS.toNanos(random); // 设置缓存过期再随机加个后缀
         }
         @Override
         public long expireAfterUpdate(String key, FundDTO value, long currentTime, long currentDuration) {
@@ -181,7 +181,12 @@ public class FundComponent {
             }
             return fundDTODetail;
         }
+
     });
+
+
+    LoadingCache<String, JSONObject> fundRankCache = Caffeine.newBuilder().refreshAfterWrite(1, TimeUnit.HOURS)
+            .build(key -> getFundRank());
 
 
     /*LoadingCache<String, FundDTO> fundCache = Caffeine.newBuilder().expireAfter(new Expiry<String, FundDTO>() {
