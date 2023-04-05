@@ -81,6 +81,42 @@ Modern browsers and Internet Explorer 10+.
 
 ## License
 
-[MIT](https://github.com/PanJiaChen/vue-admin-template/blob/master/LICENSE) license.
 
-Copyright (c) 2017-present PanJiaChen
+##
+#macro (firsyCharToUpperCase $strIn)$strIn.valueOf($strIn.charAt(0)).toUpperCase()$strIn.substring(1)#end
+#macro (firsyCharToLowerCase $strIn)$strIn.valueOf($strIn.charAt(0)).toLowerCase()$strIn.substring(1)#end
+## Iterate through the list and generate testcase for every entry.
+#foreach ($entry in $entryList)
+#set($testClass="${entry.className}Test")
+#set($testObj="#firsyCharToLowerCase(${entry.className})")
+##
+package $entry.packageName;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.alibaba.fastjson.JSONObject;
+
+/**
+* ${entry.className}Tester.
+*
+* @Author: DoctorXiong.club
+* @CreateDate: $date.format("yyyy-MM-dd")
+*/
+@SpringBootTest
+@RunWith(SpringRunner.class)
+public class $testClass {
+
+    @Autowired
+    private ${entry.className} $testObj;
+
+#foreach($method in $entry.methodList)
+    @Test
+    public void test#firsyCharToUpperCase(${method.name})() {
+        // System.out.println(JSONObject.toJSONString($testObj.${method.name}()));
+    }
+#end
+}
+#end
+

@@ -87,7 +87,7 @@ public class ExpireComponent {
      * @return long
      */
     private static Long getThreeHoursRandomMillsSecond(){
-        Long max=1080L,min=0L;
+        Long max=3600L,min=1000L;
         long randomNum = System.currentTimeMillis();
         return (randomNum%(max-min)+min)*SECOND_MILLISECOND;
     }
