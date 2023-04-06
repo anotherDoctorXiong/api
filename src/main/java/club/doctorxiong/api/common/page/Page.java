@@ -1,5 +1,6 @@
 package club.doctorxiong.api.common.page;
 
+import club.doctorxiong.api.common.dto.CacheDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Page implements Serializable {
+public class Page extends CacheDTO implements Serializable {
 
     /**
      * 页码

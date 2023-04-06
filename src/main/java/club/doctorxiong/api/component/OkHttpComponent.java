@@ -27,18 +27,13 @@ public class OkHttpComponent {
      * @param url 请求的url
      * @return
      */
-    public String getWithHeaders(String url, Headers headers) {
+    public String getWithHeaders(String url, Headers headers) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .headers(headers)
                 .build();
-        try {
-            Response response = okHttpClient.newCall(request).execute();
-            return response.body().string();
-        } catch (IOException e) {
-            log.error("okHttp3 getWithHeaders "+url+" error:"+e.getMessage());
-            return null;
-        }
+        Response response = okHttpClient.newCall(request).execute();
+        return response.body().string();
     }
 
     /**
@@ -46,18 +41,27 @@ public class OkHttpComponent {
      * @param url 请求的url
      * @return
      */
-    public String get(String url) {
+    public String get(String url) throws IOException{
 
         Request request = new Request.Builder()
                 .url(url)
                 .build();
+        Response response = okHttpClient.newCall(request).execute();
+        return response.body().string();
+    }
+
+    public String getNoException(String url){
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        Response response = null;
         try {
-            Response response = okHttpClient.newCall(request).execute();
+            response = okHttpClient.newCall(request).execute();
             return response.body().string();
-        } catch (IOException e) {
-            log.error("okHttp3 get "+url+" error:"+e.getMessage());
-            return null;
+        } catch (IOException  e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
     /**

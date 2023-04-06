@@ -25,7 +25,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StockDTO implements Serializable {
+public class StockDTO extends CacheDTO implements Serializable {
     //股票代码
     private String code;
     //股票名称
@@ -75,11 +75,14 @@ public class StockDTO implements Serializable {
 
     private String[][] arrData;
 
-    public StockDTO(String[] arr) {
+    public StockDTO(String code) {
+        this.code = code;
+    }
+
+    public void setStockData(String[] arr){
         if(arr.length<50){
             return;
         }
-
         try {
             this.type=arr[61];
             if(!"ZS".equals(this.type)){
@@ -121,10 +124,9 @@ public class StockDTO implements Serializable {
                     this.sell[j] = String.valueOf(Integer.valueOf(this.sell[j])/100 + (Integer.valueOf(this.sell[j])%100>50?1:0));
                 }
             }
-
         }
-
     }
+
 
     public boolean invalidStock(){
         return StringUtil.isBlank(this.code) || StringUtil.isBlank(this.name) || StringUtil.isBlank(this.type);

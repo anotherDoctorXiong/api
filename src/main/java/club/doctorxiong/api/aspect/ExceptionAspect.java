@@ -44,7 +44,7 @@ public class ExceptionAspect {
 
         if (ex instanceof MissingServletRequestParameterException) {
             MissingServletRequestParameterException e = (MissingServletRequestParameterException) ex;
-            log.info("MissingServletRequestParameterException: {}", e);
+            log.info("MissingServletRequestParameterException: {%s}", e);
             CommonResponse response = new CommonResponse();
             response.setCode(CommonResponse.Code.FAIL);
             response.setMessage(String.format("缺少请求参数:%s", e.getParameterName()));
