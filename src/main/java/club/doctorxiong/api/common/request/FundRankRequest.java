@@ -161,4 +161,12 @@ public class FundRankRequest implements Serializable {
     public void setPn(int pn) {
         this.pn = pn;
     }
+
+    /**
+     *
+     */
+    @Override
+    public int hashCode(){
+        return this.toString().hashCode();
+    }
 }

@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @ToString
-public class FundDTO implements Serializable {
+public class FundDTO extends CacheDTO implements Serializable {
     /**
      * 基金代码
      * */

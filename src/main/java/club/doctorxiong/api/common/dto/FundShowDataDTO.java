@@ -24,7 +24,7 @@ import java.util.Arrays;
 @AllArgsConstructor
 @Builder
 @Slf4j
-public class FundShowDataDTO implements Serializable {
+public class FundShowDataDTO extends CacheDTO implements Serializable {
 
     /**
      * 基金代码
@@ -111,9 +111,18 @@ public class FundShowDataDTO implements Serializable {
         this.lastSixMonthsGrowth= fundDTODetail.getLastSixMonthsGrowth();
         this.lastYearGrowth= fundDTODetail.getLastYearGrowth();
     }
+
+    public void setExpectData(FundExpectDataDTO expectData) {
+        this.expectWorth=expectData.getExpectWorth();
+        this.expectWorthDate=expectData.getExpectWorthDate();
+        this.expectGrowth=expectData.getExpectGrowth();
+    }
+
     //    0         1              2            3        4       5     6     7      8     9     10      11
     // 162717,广发再融资主题(LOF)A,GFZRZZTLOFA,2022-04-27,1.0879,1.0879,9.72,-4.17,-16.70,-24.28,-25.33,-24.66,-5.81,14.76,-27.32,8.79,2016-12-19,1,-24.6607,1.50%,0.15%,1,0.15%,1,7.82
-    public FundShowDataDTO(String[] arr, FundExpectDataDTO expectData) {
+
+
+    public FundShowDataDTO(String[] arr) {
         this.code = arr[0];
         this.name = arr[1];
         this.fundType=arr[2];
@@ -132,10 +141,5 @@ public class FundShowDataDTO implements Serializable {
         this.lastSixMonthsGrowth = arr[10];
         this.lastYearGrowth = arr[11];
         this.thisYearGrowth = arr[14];
-        if(expectData!=null){
-            this.expectWorth=expectData.getExpectWorth();
-            this.expectWorthDate=expectData.getExpectWorthDate();
-            this.expectGrowth=expectData.getExpectGrowth();
-        }
     }
 }

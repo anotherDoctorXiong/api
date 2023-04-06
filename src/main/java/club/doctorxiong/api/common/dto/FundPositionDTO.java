@@ -24,7 +24,7 @@ import java.util.List;
  * @author xiongxin
  * @return
  */
-public class FundPositionDTO implements Serializable {
+public class FundPositionDTO extends CacheDTO implements Serializable {
     // 标题 嘉实农业产业股票  2020年1季度股票投资明细
     private String title;
     // 数据更新日期

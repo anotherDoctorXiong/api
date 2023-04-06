@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FundExpectDataDTO implements Serializable {
+public class FundExpectDataDTO extends CacheDTO implements Serializable {
 
     /**
      * 净值估算更新日期

@@ -20,6 +20,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import club.doctorxiong.api.uitls.StringUtil;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
@@ -125,7 +126,7 @@ public class PushService {
     public void pushJin10Content(List<Email> emails){
         // 开始推送金十数据(央行)
         List<Jin10ReportData> contentList = new LinkedList<>();
-        String str = okHttpComponent.get(UrlUtil.getJin10Data(LocalDateTime.now()));
+        String str = okHttpComponent.getNoException(UrlUtil.getJin10Data(LocalDateTime.now()));
         str = str.replaceAll("金十","");
         Jin10Response<Jin10ReportData> data = JSONObject.parseObject(str, new TypeReference<Jin10Response<Jin10ReportData>>(){});
         data.getData().forEach( currentContent -> {
@@ -199,7 +200,12 @@ public class PushService {
         headersBuild.add("x-app-id","SRvUdAEfVxLO5NAd");
         headersBuild.add("x-version","1.0.1");
 
-        String str = okHttpComponent.getWithHeaders("https://search-open-api.jin10.com/search?page=1&page_size=10&order=1&type=flash&keyword=北向资金今日", headersBuild.build());
+        String str = null;
+        try {
+            str = okHttpComponent.getWithHeaders("https://search-open-api.jin10.com/search?page=1&page_size=10&order=1&type=flash&keyword=北向资金今日", headersBuild.build());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         str = str.replaceAll("金十","");
         Jin10SearchResponse<Jin10SearchData> data = JSONObject.parseObject(str, new TypeReference<Jin10SearchResponse<Jin10SearchData>>(){});
         data.getData().getList().forEach( currentContent -> {
@@ -228,7 +234,12 @@ public class PushService {
         Headers.Builder headersBuild = new Headers.Builder();
         headersBuild.add("x-app-id","SRvUdAEfVxLO5NAd");
         headersBuild.add("x-version","1.0.1");
-        String str = okHttpComponent.getWithHeaders("https://search-open-api.jin10.com/search?page=1&page_size=10&order=1&type=flash&keyword=主力资金", headersBuild.build());
+        String str = null;
+        try {
+            str = okHttpComponent.getWithHeaders("https://search-open-api.jin10.com/search?page=1&page_size=10&order=1&type=flash&keyword=主力资金", headersBuild.build());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Jin10SearchResponse<Jin10SearchData> data = JSONObject.parseObject(str, new TypeReference<Jin10SearchResponse<Jin10SearchData>>(){});
         data.getData().getList().forEach( currentContent -> {
             if(currentContent.getData() != null ){

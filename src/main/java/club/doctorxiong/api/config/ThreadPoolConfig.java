@@ -73,7 +73,7 @@ public class ThreadPoolConfig {
                     }
                 }
                 if (t != null) {
-                    log.error("ThreadPoolExecutor execute error, message: {}, {}", t.getMessage(), t);
+                    log.error("ThreadPoolExecutor execute error, message: {%s}, {%s}", t.getMessage(), t);
                 }
             }
         };
