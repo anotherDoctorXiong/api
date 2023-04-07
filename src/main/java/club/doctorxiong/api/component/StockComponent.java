@@ -1,14 +1,12 @@
 package club.doctorxiong.api.component;
 
 
-import club.doctorxiong.api.common.InnerException;
-import club.doctorxiong.api.common.LocalDateTimeFormatter;
-import club.doctorxiong.api.common.RedisKeyConstants;
+
 import club.doctorxiong.api.common.dto.ConvertBondDTO;
-import club.doctorxiong.api.common.dto.FundExpectDataDTO;
 import club.doctorxiong.api.common.dto.IndustryDetailDTO;
 import club.doctorxiong.api.common.dto.StockDTO;
 import club.doctorxiong.api.common.page.PageData;
+import club.doctorxiong.api.common.request.KLineRequest;
 import club.doctorxiong.api.common.request.StockRankRequest;
 import club.doctorxiong.api.uitls.LambdaUtil;
 import club.doctorxiong.api.uitls.UrlUtil;
@@ -16,15 +14,17 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.cglib.core.internal.LoadingCache;
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.springframework.stereotype.Component;
 import club.doctorxiong.api.uitls.StringUtil;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +33,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static club.doctorxiong.api.common.LocalDateTimeFormatter.printValidTime;
+
 
 
 /**
@@ -92,32 +92,31 @@ public class StockComponent {
             return currentDuration; // 返回剩余时间，不更新过期时间
         }
     }).build(key -> getStockData(key));
-    // com.github.benmanes.caffeine.cache.Cache<String, String, Integer> cache = Caffeine.newBuilder().build();
 
 
     /**
      * 股票日k缓存
      */
-    public LoadingCache<String, Integer, StockDTO> KLineCache = Caffeine.newBuilder().expireAfter(new Expiry<String,Integer, StockDTO>() {
+    public LoadingCache<KLineRequest, StockDTO> KLineCache = Caffeine.newBuilder().expireAfter(new Expiry<KLineRequest, StockDTO>() {
 
         @Override
-        public long expireAfterCreate(String key, Integer value, long currentTime) {
+        public long expireAfterCreate(KLineRequest key, StockDTO value, long currentTime) {
             return 0;
         }
 
         @Override
-        public long expireAfterUpdate(String key, Integer value, long currentTime, long currentDuration) {
+        public long expireAfterUpdate(KLineRequest key, StockDTO value, long currentTime, long currentDuration) {
             return 0;
         }
 
         @Override
-        public long expireAfterRead(String key, Integer value, long currentTime, long currentDuration) {
+        public long expireAfterRead(KLineRequest key, StockDTO value, long currentTime, long currentDuration) {
             return 0;
         }
-    }).build((key1, key2)-> getKLineData(key1,key2));
+    }).build((key)-> getKLineData(key));
 
 
-    public StockDTO getStockData(String stockCode) {
+    private StockDTO getStockData(String stockCode) {
         StockDTO stockDTO = new StockDTO();
         String stockUrl = UrlUtil.getStockDataUrl(stockCode);
         try {
@@ -150,37 +149,36 @@ public class StockComponent {
     }
 
     /**
-     * @param stockCode
-     * @param type
+     * @param request
      * @name: getKLineData
      * @auther: 熊鑫
      * @return: club.doctorxiong.stub.dto.stock.Stock
      * @date: 2020/9/6 16:00
      * @description: 按照复权不同分为三类
      */
-    public StockDTO getKLineData(String stockCode, int type) {
+    private StockDTO getKLineData(KLineRequest request) {
         String stockUrl;
         String key;
-        switch (type) {
+        switch (request.getType()) {
             case 1:
-                stockUrl = UrlUtil.getStockKLineQFQUrl(stockCode);
+                stockUrl = UrlUtil.getStockKLineQFQUrl(request.getStockCode());
                 key = "qfqday";
                 break;
             case 2:
-                stockUrl = UrlUtil.getStockKLineHFQUrl(stockCode);
+                stockUrl = UrlUtil.getStockKLineHFQUrl(request.getStockCode());
                 key = "hfqday";
                 break;
             default:
-                stockUrl = UrlUtil.getStockKLineUrl(stockCode);
+                stockUrl = UrlUtil.getStockKLineUrl(request.getStockCode());
                 key = "day";
         }
         StockDTO stockDTO = new StockDTO();
         try {
             String res = httpSupport.get(stockUrl);
             JSONObject jsonObject = JSON.parseObject(res);
-            JSONObject data = jsonObject.getJSONObject("data").getJSONObject(stockCode);
+            JSONObject data = jsonObject.getJSONObject("data").getJSONObject(request.getStockCode());
             //最新基础数据
-            String[] stockData = data.getJSONObject("qt").getObject(stockCode, String[].class);
+            String[] stockData = data.getJSONObject("qt").getObject(request.getStockCode(), String[].class);
             stockDTO.setStockData(stockData);
             if ("ZS".equals(stockDTO.getType())) {
                 key = "day";
@@ -205,7 +203,10 @@ public class StockComponent {
      * @date: 2019/6/24 21:32
      * @description: 获取股票详情和日K数据
      */
-    public List<IndustryDetailDTO> getStockIndustryRank() {
+
+    LoadingCache<String, List<IndustryDetailDTO>> stockIndustryCache = Caffeine.newBuilder().expireAfterWrite(1,TimeUnit.DAYS).build(key -> getStockIndustry());
+
+    private List<IndustryDetailDTO> getStockIndustry() {
         List<IndustryDetailDTO> res = new ArrayList<>();
         try {
             String industryStr = httpSupport.get(UrlUtil.getSWUrl());
@@ -220,13 +221,29 @@ public class StockComponent {
                 return new IndustryDetailDTO(jsonArray6.getString(2), jsonArray6.getString(0));
             }).collect(Collectors.toList());
         } catch (IOException e) {
-            log.error(String.format("IndustryDetailDTO http connect fail! connect url{%s},error message{%s}", stockUrl, e.getMessage()));
+            log.error(String.format("IndustryDetailDTO http connect fail! connect url{%s},error message{%s}", UrlUtil.getSWUrl(), e.getMessage()));
         }catch (Exception e) {
-            e.printStackTrace();
+            log.error(String.format("IndustryDetailDTO data resolve fail! connect url{%s},error message{%s}", UrlUtil.getSWUrl(), e.getMessage()));
         }
         return res;
     }
 
+    LoadingCache<StockRankRequest,PageData<StockDTO>> stackRankCache = Caffeine.newBuilder().expireAfter(new Expiry<StockRankRequest, PageData<StockDTO>>() {
+        @Override
+        public long expireAfterCreate(StockRankRequest stockRankRequest, PageData<StockDTO> stockDTOPageData, long l) {
+            return 0;
+        }
+
+        @Override
+        public long expireAfterUpdate(StockRankRequest stockRankRequest, PageData<StockDTO> stockDTOPageData, long l, @NonNegative long l1) {
+            return 0;
+        }
+
+        @Override
+        public long expireAfterRead(StockRankRequest stockRankRequest, PageData<StockDTO> stockDTOPageData, long l, @NonNegative long l1) {
+            return 0;
+        }
+    }).build(key -> getStockRank(key));
     /**
      * @name: industryStockCodeStr
      * @auther: 熊鑫
@@ -235,7 +252,7 @@ public class StockComponent {
      * @description: 获取板块的股票代码字符串, 偷懒直接返回json
      * {t:'pt012069/chr',p:1,total:72,l:10,o:0,data:'sz002839,sh601577,sh600908,sh601128,sz002807,sz002142,sh601916,sh601009,sh600000,sh600926'}
      */
-    public PageData<StockDTO> getStockRank(StockRankRequest request) {
+    private PageData<StockDTO> getStockRank(StockRankRequest request) {
         PageData<StockDTO> stockRank = new PageData();
         String requestUrl = UrlUtil.getSinaStockRankUrl(request);
         try {
@@ -256,14 +273,17 @@ public class StockComponent {
             log.error(String.format("StockRank data resolve fail! connect url{%s},error message{%s}", requestUrl, e.getMessage()));
         }
         return stockRank;
-
     }
 
-    public Integer getSinaStockCount(String node) throws IOException{
+
+    LoadingCache<String,Integer> stockCountCache = Caffeine.newBuilder().expireAfterWrite(1,TimeUnit.DAYS).build(key -> getStockCount(key));
+    private Integer getStockCount(String node) throws IOException{
         return Integer.valueOf(httpSupport.get(UrlUtil.getSinaStockCountUrl(node)).replaceAll("\"", ""));
     }
 
-    public List<String[]> getAllStockOrIndex(boolean stock) throws IOException {
+
+    LoadingCache<Boolean,List<String[]>> allStockAndIndexCache = Caffeine.newBuilder().expireAfterWrite(1,TimeUnit.DAYS).build(key -> getAllStockAndIndex(key));
+    public List<String[]> getAllStockAndIndex(boolean stock) throws IOException {
         List<String[]> allStock = new ArrayList<>();
         String requestUrl;
         if (stock) {
@@ -281,8 +301,6 @@ public class StockComponent {
         }
         return allStock;
     }
-
-
 
     public List<ConvertBondDTO> getConvertBondList() throws IOException{
         Integer pageIndex = 1;

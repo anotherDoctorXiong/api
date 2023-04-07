@@ -14,7 +14,7 @@ import java.util.List;
  * @date : 2019/6/4 14:42
  */
 @ToString
-public class FundRankRequest implements Serializable {
+public class FundRankRequest {
 
     /**
      * 基金类型(股票gp指数zf混合hh债券zqDQIIdqiiFOFfof)
