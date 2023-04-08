@@ -113,4 +113,9 @@ public class StockRankRequest implements Serializable {
     public void setNode(String node) {
         this.node = node;
     }
+
+    @Override
+    public int hashCode(){
+        return this.toString().hashCode();
+    }
 }
