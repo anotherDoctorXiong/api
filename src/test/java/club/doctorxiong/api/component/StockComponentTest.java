@@ -23,7 +23,7 @@ public class StockComponentTest {
 
     @Test
     public void testGetStockData() {
-        System.out.println(JSONObject.toJSONString(stockComponent.getStockData("sh000001")));
+        // System.out.println(JSONObject.toJSONString(stockComponent.getStockData("sh000001")));
     }
     @Test
     public void testGetKLineData() {

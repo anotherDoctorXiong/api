@@ -123,10 +123,6 @@ public class StockController {
 
     @RequestMapping(value = "/convertBond", method = RequestMethod.POST)
     public CommonResponse<PageData<ConvertBondDTO>> getConvertBond(@RequestBody PageRequest request) {
-        if (!RedisKeyConstants.CONVERT_BOND_DATE_OFF_SET.isEqual(LocalDate.now()) || convertBondList.isEmpty()) {
-            commonDataComponent.refreshConvertBondList();
-            RedisKeyConstants.CONVERT_BOND_DATE_OFF_SET = LocalDate.now();
-        }
         PageData<ConvertBondDTO> convertBondPage = new PageData();
         convertBondPage.setPageIndex(request.getPageIndex());
         convertBondPage.setPageSize(request.getPageSize());

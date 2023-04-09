@@ -5,6 +5,7 @@ import club.doctorxiong.api.common.LocalDateTimeFormatter;
 import club.doctorxiong.api.common.RedisKeyConstants;
 import club.doctorxiong.api.common.dto.IndustryDetailDTO;
 import club.doctorxiong.api.common.dto.StockDTO;
+import club.doctorxiong.api.common.request.KLineRequest;
 import club.doctorxiong.api.common.request.StockRankRequest;
 import club.doctorxiong.api.component.CommonDataComponent;
 import club.doctorxiong.api.component.ExpireComponent;
@@ -64,38 +65,15 @@ public class StockService  {
      * @description: 获取板块排行
      */
     public List<IndustryDetailDTO> getIndustryRank() {
-        List<IndustryDetailDTO> list = (List<IndustryDetailDTO>) redisTemplate.opsForValue().get(INDUSTRY_RANK);
-        if (list == null) {
-            list = stockComponent.getStockIndustryRank();
-            long validTime = expireComponent.getDataExpireTime(20);
-            log.info("缓存板块有效期截至:" + printValidTime(validTime));
-            redisTemplate.opsForValue().set(INDUSTRY_RANK, list, validTime, TimeUnit.MILLISECONDS);
-        }
-        return list;
+        return stockComponent.stockIndustryCache.get("");
     }
 
     public PageData<StockDTO> getStockRank(StockRankRequest request) {
-        String redisKey = RedisKeyConstants.getStockRankKey(request);
-        JSONArray json = (JSONArray) redisTemplate.opsForValue().get(redisKey);
-        if (json == null) {
-            json = stockComponent.getSinaStockRank(request);
-            long validTime = expireComponent.getDataExpireTime(5);
-            redisTemplate.opsForValue().set(redisKey, json, validTime, TimeUnit.MILLISECONDS);
-            log.info("股票排行" + redisKey + "股票数据缓存至:" + printValidTime(validTime));
-        }
-        if (json.size() < 1) {
-            InnerException.exInvalidParam("无效的排行数据");
-        }
-        PageData<StockDTO> stockRank = new PageData();
+        PageData<StockDTO> stockRank = stockComponent.stackRankCache.get(request);
         stockRank.setPageIndex(request.getPageIndex());
         stockRank.setPageSize(request.getPageSize());
-        Integer allCount = (Integer) redisTemplate.opsForValue().get("StockCount" + request.getNode());
-        if (allCount == null) {
-            allCount = stockComponent.getSinaStockCount(request.getNode());
-            redisTemplate.opsForValue().set("StockCount" + request.getNode(), allCount, LocalDateTimeFormatter.DAY_MILLISECOND, TimeUnit.MILLISECONDS);
-        }
+        Integer allCount = stockComponent.stockCountCache.get(request.getNode());
         stockRank.setTotalRecord(allCount);
-        stockRank.setRank(getStockList(json));
         return stockRank;
     }
 
@@ -109,43 +87,14 @@ public class StockService  {
      * @description:
      */
     public String[][] getDayData(String stockCode, LocalDate startDate, LocalDate endDate, int type) {
-        LocalDateTime now = LocalDateTime.now();
+
         if (type < 0 || type > 2) {
             InnerException.exInvalidParam("type(0-不复权,1-前复权,2-后复权)");
         }
         //key规则,股票代码+d(日),w(周),m(月)+0(不复权),1(前复权),2(后复权)
         stockCode = StringUtil.getTotalStockCode(stockCode);
-        String key = stockCode + "d" + type;
-        /*if (!CommonDataComponent.allStockCode.contains(stockCode) && !CommonDataComponent.fundCodeAndTypeMap.containsKey(stockCode.substring(2))) {
-            InnerException.exInvalidParam("无效的股票代码");
-        }*/
-
-        KLine dayKLine = kLineService.getByKey(key);
         //K线数据为两部分组成,历史K线和当日K线,当日K线为实时K线数据一般由当日分时数据
-        String[][] kLineData;
-        //数据库有符合要求的数据
-        if (dayKLine != null && dayKLine.getValidTime().compareTo(now) > 0) {
-            kLineData = dayKLine.getArr();
-        } else {
-            //数据库无符合要求的数据则从网络获取数据
-            StockDTO stockDTO = stockComponent.getKLineData(stockCode, type);
-            if(stockDTO.invalidStock()){
-                InnerException.exInvalidParam("无效的股票代码");
-            }
-            kLineData = stockDTO.getArrData();
-
-            //将新数据确定有效时间后插入数据库
-            LocalDateTime validDate = expireComponent.getDailyDataValidTime(stockDTO.getDate().toLocalDate());
-
-            //插入或更新
-            KLine newKLine = new KLine();
-            newKLine.setCode(key);
-            log.info(key + "有效期:" + validDate);
-            newKLine.setValidTime(validDate);
-            newKLine.setData(StringUtil.ArrToBytes(kLineData));
-            kLineService.saveOrUpdate(newKLine);
-        }
-        // 开始替换最后一条数据,一般是当日日K,由分时数据统计出来
+        String[][] kLineData = stockComponent.KLineCache.get(new KLineRequest(type,stockCode)).getArrData();
         StockDTO stockDTO = getStock(stockCode);
         LocalDate stockDate = stockDTO.getDate().toLocalDate();
         if(kLineData.length == 0){
@@ -179,40 +128,19 @@ public class StockService  {
         LocalDateTime now = LocalDateTime.now();
         //不同K线的编码格式,股票代码+d(日),w(周),m(月)+0(不复权),1(前复权),2(后复权)
         stockCode = StringUtil.getTotalStockCode(stockCode);
-        /*if (!CommonDataComponent.allStockCode.contains(stockCode) && !CommonDataComponent.fundCodeAndTypeMap.containsKey(stockCode.substring(2))) {
-            InnerException.exInvalidParam("无效的股票代码");
-        }*/
-        String key = stockCode + (week ? "w" : "m") + type;
-        KLine kLine = kLineService.getByKey(key);
-        String[][] kLineData;
-        if (kLine != null && kLine.getValidTime().compareTo(now) > 0) {
-            kLineData = kLine.getArr();
-        } else {
-            //获取日K数据计算周K
-            String[][] dayKLine = getDayData(stockCode, null, null, type);
-
-            ConcurrentHashMap<Integer, String[]> map = new ConcurrentHashMap<>();
-            Arrays.asList(dayKLine).parallelStream().forEach(arr -> {
-                setWeekOrMonthData(arr, map, week);
-            });
-            kLineData = map.values().stream().sorted(new Comparator<String[]>() {
-                                                         @Override
-                                                         public int compare(String[] o1, String[] o2) {
-                                                             return o1[0].compareTo(o2[0]);
-                                                         }
+        String[][] kLineData = getDayData(stockCode, null, null, type);
+        Map<Integer, String[]> map = new HashMap<>();
+        Calendar calendar = Calendar.getInstance();
+        Arrays.asList(kLineData).stream().forEach(arr -> {
+            setWeekOrMonthData(calendar, arr, map, week);
+        });
+        kLineData = map.values().stream().sorted(new Comparator<String[]>() {
+                                                     @Override
+                                                     public int compare(String[] o1, String[] o2) {
+                                                         return o1[0].compareTo(o2[0]);
                                                      }
-            ).collect(Collectors.toList()).toArray(new String[map.size()][6]);
-            //从数据库获取有效时间
-            LocalDateTime validDate = kLineService.getByKey(stockCode + "d" + type).getValidTime();
-            //插入或更新
-            KLine newKLine = new KLine();
-            newKLine.setCode(key);
-            log.info(key + "有效期:" + validDate.toString());
-            newKLine.setValidTime(validDate);
-            newKLine.setData(StringUtil.ArrToBytes(kLineData));
-            kLineService.saveOrUpdate(newKLine);
-
-        }
+                                                 }
+        ).collect(Collectors.toList()).toArray(new String[map.size()][6]);
         //考虑开始时间和结束时间为null的情况
         int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(kLineData, startDate.toString());
         int end = endDate == null ? (kLineData.length - 1) : StringUtil.getIndexOrRight(kLineData, endDate.toString());
@@ -232,10 +160,9 @@ public class StockService  {
      * @description: 对计算周K月K
      */
 
-    public void setWeekOrMonthData(String[] oneDayData, ConcurrentHashMap<Integer, String[]> map, boolean week) {
+    private void setWeekOrMonthData(Calendar calendar, String[] oneDayData, Map<Integer, String[]> map, boolean week) {
         try {
             Date date = new SimpleDateFormat("yyyy-MM-dd").parse(oneDayData[0]);
-            Calendar calendar = Calendar.getInstance();
             calendar.setTime(date);
 
             int key;
@@ -288,29 +215,7 @@ public class StockService  {
      */
     public StockDTO getStock(String stockCode) {
         stockCode = StringUtil.getTotalStockCode(stockCode);
-        /*if (!CommonDataComponent.allStockCode.contains(stockCode) && !CommonDataComponent.fundCodeAndTypeMap.containsKey(stockCode.substring(2))) {
-            InnerException.exInvalidParam("无效的股票代码");
-        }*/
-        StockDTO stockDTO = (StockDTO) redisTemplate.opsForValue().get(stockCode);
-        if (stockDTO == null) {
-            //无法从缓存获取
-            stockDTO = stockComponent.getStockData(stockCode);
-            if(stockDTO.invalidStock()){
-                InnerException.exInvalidParam("无效的股票代码");
-            }
-            long validTime = expireComponent.getMinuteDataExpireTime(stockDTO.getDate());
-            log.info("缓存股票:" + stockCode + ":" + printValidTime(validTime));
-            if("ZS".equals(stockDTO.getType())){
-                CommonDataComponent.allIndexMap.put(stockDTO.getCode(),stockDTO.getName());
-            }else {
-                CommonDataComponent.allStockMap.put(stockDTO.getCode(),stockDTO.getName());
-            }
-
-            redisTemplate.opsForValue().set(stockCode, stockDTO, validTime, TimeUnit.MILLISECONDS);
-        }
-        //热度权值加一
-        redisTemplate.opsForZSet().incrementScore("hotList", stockCode, 1);
-        return stockDTO;
+        return stockComponent.stockCache.get(stockCode);
     }
 
 
@@ -329,16 +234,7 @@ public class StockService  {
     }
 
 
-    public List<StockDTO> getStockList(JSONArray arr) {
-        return arr.parallelStream().map(
-                LambdaUtil.mapWrapper(e -> {
-                    JSONObject object = (JSONObject) e;
-                    StockDTO stockDTO = getStock(object.getString("symbol"));
-                    stockDTO.setMinData(null);
-                    return stockDTO;
-                })
-        ).filter(Objects::nonNull).collect(Collectors.toList());
-    }
+
 
     /**
      * @param
@@ -349,16 +245,13 @@ public class StockService  {
      * @description: 返回所有股票(包含以退市)
      */
     public List<String[]> getStockAll(String keyWord) {
-        if (!RedisKeyConstants.ALL_STOCK_DATE_OFF_SET.isEqual(LocalDate.now())) {
-            commonDataComponent.refreshStock();
-            RedisKeyConstants.ALL_STOCK_DATE_OFF_SET = LocalDate.now();
-        }
+        List<String[]> allStock = stockComponent.allStockAndIndexCache.get(true);
         if (keyWord == null || keyWord.isEmpty()) {
-            return CommonDataComponent.allStockMap.entrySet().stream().map(entity -> new String[]{entity.getKey(),entity.getValue()}).collect(Collectors.toList());
+            return allStock;
         }else if (StringUtil.isDigit(keyWord)) {
-            return CommonDataComponent.allStockMap.entrySet().stream().filter(entity -> entity.getKey().contains(keyWord)).map(entity -> new String[]{entity.getKey(),entity.getValue()}).collect(Collectors.toList());
+            return allStock.stream().filter(arr -> arr[0].contains(keyWord)).collect(Collectors.toList());
         } else {
-            return CommonDataComponent.allStockMap.entrySet().stream().filter(entity -> entity.getValue().contains(keyWord)).map(entity -> new String[]{entity.getKey(),entity.getValue()}).collect(Collectors.toList());
+            return allStock.stream().filter(arr -> arr[1].contains(keyWord)).collect(Collectors.toList());
         }
     }
 
@@ -371,7 +264,7 @@ public class StockService  {
      * @description: 获取所有指数
      */
     public List<String[]> getIndexAll() {
-        return CommonDataComponent.allIndexMap.entrySet().stream().map(entity -> new String[]{entity.getKey(),entity.getValue()}).collect(Collectors.toList());
+        return stockComponent.allStockAndIndexCache.get(false);
     }
 
 

@@ -6,6 +6,8 @@ server:
 spring:
   application:
     name: doctorxiong-club-api
+  profiles:
+    active: prod
   mail:
     # 邮件服务地址
     host: smtp.163.com

@@ -17,6 +17,11 @@ public class KLineRequest {
     private int type;
     private String stockCode;
 
+    public KLineRequest(int type, String stockCode) {
+        this.type = type;
+        this.stockCode = stockCode;
+    }
+
     @Override
     public int hashCode(){
         return this.toString().hashCode();

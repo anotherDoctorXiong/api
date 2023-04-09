@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 @Slf4j
-public class CommonDataComponent implements CommandLineRunner {
+public class CommonDataComponent {
     @Autowired
     private StockComponent stockComponent;
     @Autowired
@@ -40,7 +40,7 @@ public class CommonDataComponent implements CommandLineRunner {
     private BitSet bits = new BitSet(DEFAULT_SIZE);
     private SimpleHash[] func = new SimpleHash[SEEDS.length];
 
-    @Override
+    /*@Override
     public void run(String... args) {
         //把股票代码,指数代码,基金代码全塞进去
 
@@ -64,9 +64,9 @@ public class CommonDataComponent implements CommandLineRunner {
         refreshConvertBondList();
     }
 
-    /**
+    *//**
      * 刷新可转债列表
-     */
+     *//*
     public void refreshConvertBondList(){
         convertBondList = stockComponent.getConvertBondList();
     }
@@ -88,7 +88,7 @@ public class CommonDataComponent implements CommandLineRunner {
                 allIndexMap.put(index[0],index[1]);
             }
         });
-    }
+    }*/
 
 
 

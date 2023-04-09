@@ -5,19 +5,6 @@
     <!-- name的值是变量的名称，value的值时变量定义的值。通过定义的值会被插入到logger上下文中。定义变量后，可以使“${}”来使用变量。 -->
     <property name="log.path" value="/root/logs" />
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator>
-                <expression>return message.contains("SELECT 1");</expression>
-            </evaluator>
-            <OnMismatch>NEUTRAL</OnMismatch>
-            <OnMatch>DENY</OnMatch>
-        </filter>
-        <encoder>
-            <charset>utf-8</charset>
-            <Pattern>[%d{yyyy-MM-dd HH:mm:ss}]|%-5p|[%X{traceId}][%X{EagleEye-TraceID}] %t %C{36} %L %M %m%n</Pattern>
-        </encoder>
-    </appender>
 
     <!--输出到控制台-->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -168,6 +155,13 @@
         不能设置为INHERITED或者同义词NULL。默认是DEBUG
         可以包含零个或多个元素，标识这个appender将会添加到这个logger。
     -->
+
+    <springProfile name="local,prod">
+        <logger name="org.springframework.web" level="INFO"/>
+        <logger name="club.doctorxiong" level="DEBUG"/>
+    </springProfile>
+
+
 
     <root level="debug">
         <appender-ref ref="CONSOLE" />

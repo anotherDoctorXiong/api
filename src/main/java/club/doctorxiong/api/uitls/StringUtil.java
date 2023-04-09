@@ -259,6 +259,9 @@ public class StringUtil {
      *
      */
     public static Integer getIndexOrLeft(String[][] arrData,String date){
+        if(date.compareTo(arrData[arrData.length-1][0]) > 0){
+            return arrData.length-1;
+        }
         int n = arrData.length;
         int left = 0, right = n - 1, ans = n;
         while (left <= right) {
@@ -275,7 +278,7 @@ public class StringUtil {
         return ans;
     }
 
-    /**
+    /**·······
      * @name: getIndexOrLeft
      * @auther: 熊鑫
      * @param arrData
@@ -285,6 +288,9 @@ public class StringUtil {
      * @description: 通过二分法获取数据下标,日期格式统一为yyyy-MM-dd,使用compare比较,不存在则取右边的
      */
     public static Integer getIndexOrRight(String[][] arrData,String date){
+        if(date.compareTo(arrData[0][0]) < 0){
+            return 0 ;
+        }
         int n = arrData.length;
         int left = 0, right = n - 1, ans = n;
         while (left <= right) {

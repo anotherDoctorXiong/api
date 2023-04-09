@@ -14,7 +14,6 @@
     <packaging>jar</packaging>
     <name>api</name>
     <properties>
-        <java.version>1.8</java.version>
         <mybatis-plus-generator.version>3.5.1</mybatis-plus-generator.version>
         <mybatis-plus-boot-starter.version>3.4.3.4</mybatis-plus-boot-starter.version>
         <druid-spring-boot-starter.version>1.2.8</druid-spring-boot-starter.version>
@@ -50,7 +49,6 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
-            <version>3.1.5</version>
         </dependency>
 
         <dependency>
@@ -84,10 +82,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
-        </dependency>
+
 
         <!-- jwt -->
         <dependency>
@@ -146,11 +141,7 @@
             <version>1.10.1</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <version>2.8.0</version>
-        </dependency>
+
 
     </dependencies>
 
@@ -162,6 +153,12 @@
                 <directory>src/main/resources</directory>
             </resource>
         </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 
 </project>
