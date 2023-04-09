@@ -3,6 +3,7 @@ package club.doctorxiong.api.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.slf4j.MDC;
 
 
 import java.io.Serializable;
@@ -24,6 +25,10 @@ public class CommonResponse<T> implements Serializable {
      * 返回消息
      */
     private String message;
+
+    public String getTraceId() {
+        return MDC.get("traceId");
+    }
 
     /**
      * 链路ID

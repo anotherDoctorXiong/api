@@ -20,4 +20,8 @@ public class RequestContext {
     public static void setRequest(String request){
         THREAD_LOCAL.set(request);
     }
+
+    public static void clear() {
+        THREAD_LOCAL.remove();
+    }
 }

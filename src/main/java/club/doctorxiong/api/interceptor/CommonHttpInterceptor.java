@@ -68,6 +68,12 @@ public class CommonHttpInterceptor extends HandlerInterceptorAdapter {
 
         return true;
     }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)  {
+        RequestContext.clear();
+    }
+
     private String generateTraceId() {
         byte[] randomBytes = new byte[10];
         new SecureRandom().nextBytes(randomBytes);

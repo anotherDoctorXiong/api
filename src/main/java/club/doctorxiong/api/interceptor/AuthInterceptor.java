@@ -1,17 +1,15 @@
 package club.doctorxiong.api.interceptor;
 
-import club.doctorxiong.api.auth.UserContext;
+
 import club.doctorxiong.api.common.CommonResponse;
 import club.doctorxiong.api.common.HttpParams;
 import club.doctorxiong.api.common.RedisKeyConstants;
-
 import club.doctorxiong.api.entity.Token;
 import club.doctorxiong.api.service.ITokenService;
 import com.alibaba.fastjson.JSONObject;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -22,9 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -107,11 +103,6 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-        UserContext.clearUser();
     }
 
     /**
