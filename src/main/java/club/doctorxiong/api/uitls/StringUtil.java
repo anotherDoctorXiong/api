@@ -259,7 +259,7 @@ public class StringUtil {
      *
      */
     public static Integer getIndexOrLeft(String[][] arrData,String date){
-        if(date.compareTo(arrData[arrData.length-1][0]) > 0){
+        if(date.compareTo(arrData[arrData.length-1][0]) >= 0){
             return arrData.length-1;
         }
         int n = arrData.length;

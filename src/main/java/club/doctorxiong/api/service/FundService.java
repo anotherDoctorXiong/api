@@ -8,7 +8,10 @@ import club.doctorxiong.api.common.dto.FundExpectDataDTO;
 import club.doctorxiong.api.common.dto.FundPositionDTO;
 import club.doctorxiong.api.common.request.FundRankRequest;
 
+import club.doctorxiong.api.uitls.BeanUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import club.doctorxiong.api.uitls.StringUtil;
@@ -42,7 +45,6 @@ public class FundService {
      */
 
     public FundDTO getFund(String fundCode, LocalDate startDate, LocalDate endDate) {
-
         FundDTO fundDTODetail = fundComponent.fundCache.get(fundCode);
         if(!fundDTODetail.validFund()){
             return fundDTODetail;
@@ -50,8 +52,10 @@ public class FundService {
         if (!HUO_BI_TYPE.equals(fundDTODetail.getType())) {
             fundDTODetail.setExpectData(getFundExpect(fundCode));
         }
+
         try {
             if (startDate != null || endDate != null) {
+                fundDTODetail = SerializationUtils.clone(fundDTODetail);
                 if (HUO_BI_TYPE.equals(fundDTODetail.getType())) {
                     int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getMillionCopiesIncomeData(), startDate.toString());
                     int end = endDate == null ? (fundDTODetail.getMillionCopiesIncomeData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getMillionCopiesIncomeData(), endDate.toString());
@@ -62,7 +66,7 @@ public class FundService {
                 } else {
                     int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getNetWorthData(), startDate.toString());
                     int end = endDate == null ? (fundDTODetail.getNetWorthData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getNetWorthData(), endDate.toString());
-                    if (end >= start) {
+                    if (end > start) {
                         fundDTODetail.setNetWorthData(Arrays.copyOfRange(fundDTODetail.getNetWorthData(), start, end + 1));
                         fundDTODetail.setTotalNetWorthData(Arrays.copyOfRange(fundDTODetail.getTotalNetWorthData(), start, end + 1));
                     }
@@ -131,10 +135,9 @@ public class FundService {
         }
         // 纯数字当基金代码处理
         if(StringUtil.isDigit(keyWord)){
-            allFund = allFund.stream().filter(arr -> arr[0].contains(keyWord)).collect(Collectors.toList());
+            return allFund.stream().filter(arr -> arr[0].contains(keyWord)).collect(Collectors.toList());
         }else {
-            allFund = allFund.stream().filter(arr ->  arr[2].contains(keyWord)).collect(Collectors.toList());
+            return allFund.stream().filter(arr ->  arr[2].contains(keyWord)).collect(Collectors.toList());
         }
-        return allFund;
     }
 }

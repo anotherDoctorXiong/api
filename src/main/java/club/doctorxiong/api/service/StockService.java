@@ -75,6 +75,11 @@ public class StockService  {
         stockRank.setPageSize(request.getPageSize());
         Integer allCount = stockComponent.stockCountCache.get(request.getNode());
         stockRank.setTotalRecord(allCount);
+        List<StockDTO> stockDTOList = new ArrayList<>();
+        stockRank.getRank().forEach(stockDTO -> {
+            stockDTOList.add(getStock(stockDTO.getCode()));
+        });
+        stockRank.setRank(stockDTOList);
         return stockRank;
     }
 
