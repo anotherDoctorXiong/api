@@ -3,6 +3,7 @@ package club.doctorxiong.api.aspect;
 
 import club.doctorxiong.api.common.CommonResponse;
 import club.doctorxiong.api.common.InnerException;
+import club.doctorxiong.api.common.RequestContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -142,9 +143,8 @@ public class ExceptionAspect {
     @ResponseBody
     @ExceptionHandler(Exception.class)
     public CommonResponse handleException(HttpServletRequest req, Exception ex) {
-        // 本地调试错误直接抛出
-        String reqStr = req.getRequestURI()+"-"+req.getQueryString()+"\n";
-        log.error("系统内部异常_"+reqStr+"_"+ex.getMessage(),ex);
+        // 错误直接抛出
+        log.error("系统内部异常 请求信息:%s"+ RequestContext.getRequest());
         CommonResponse response = new CommonResponse();
         response.setCode(CommonResponse.Code.ERROR);
         response.setMessage("系统繁忙,请稍后再试");

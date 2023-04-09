@@ -2,6 +2,7 @@ package club.doctorxiong.api.interceptor;
 
 
 import club.doctorxiong.api.common.HttpParams;
+import club.doctorxiong.api.common.RequestContext;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -58,9 +59,12 @@ public class CommonHttpInterceptor extends HandlerInterceptorAdapter {
         long end = System.currentTimeMillis();
         String traceId = generateTraceId();
         MDC.put("traceId", traceId);
-        log.info(String.format(
+        RequestContext.setRequest(String.format(
                 "应用请求参数  url: %s, method: %s, query-params: %s, body-params: %s, headers-params: %s, c-ip: %s, run-time: %s, traceId: %s",
                 url, method, queryString, bodyParams, headersParams, cIp, (end - start) ,traceId + ""));
+        /*log.info(String.format(
+                "应用请求参数  url: %s, method: %s, query-params: %s, body-params: %s, headers-params: %s, c-ip: %s, run-time: %s, traceId: %s",
+                url, method, queryString, bodyParams, headersParams, cIp, (end - start) ,traceId + ""));*/
 
         return true;
     }

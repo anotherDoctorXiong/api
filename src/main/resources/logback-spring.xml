@@ -158,7 +158,7 @@
 
     <springProfile name="local,prod">
         <logger name="org.springframework.web" level="INFO"/>
-        <logger name="club.doctorxiong" level="DEBUG"/>
+        <logger name="club.doctorxiong" level="info"/>
     </springProfile>
 
 
