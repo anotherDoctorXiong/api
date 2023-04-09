@@ -128,8 +128,8 @@ public class StockDTO extends CacheDTO implements Serializable {
     }
 
 
-    public boolean invalidStock(){
-        return StringUtil.isBlank(this.code) || StringUtil.isBlank(this.name) || StringUtil.isBlank(this.type);
+    public boolean validStock(){
+        return StringUtil.isNotBlank(this.code) && StringUtil.isNotBlank(this.name) && StringUtil.isNotBlank(this.type);
     }
 
 }

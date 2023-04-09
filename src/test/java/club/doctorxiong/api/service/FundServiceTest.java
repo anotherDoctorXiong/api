@@ -1,5 +1,5 @@
 package club.doctorxiong.api.service;
-import club.doctorxiong.api.common.dto.FundShowDataDTO;
+import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.page.PageData;
 import club.doctorxiong.api.common.request.FundRankRequest;
 import org.junit.Test;
@@ -34,7 +34,7 @@ public class FundServiceTest {
         FundRankRequest request = new FundRankRequest();
         for (int i = 0; i < 10; i++) {
             request.setPi(i);
-            PageData<FundShowDataDTO> pageData = fundService.getFundRank(request);
+            PageData<FundDTO> pageData = fundService.getFundRank(request);
             pageData.getRank().forEach(fundShowDataDTO -> {
                 fundService.getFund(fundShowDataDTO.getCode(), LocalDate.of(2022,10,10),null).toString();
             });

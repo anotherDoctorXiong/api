@@ -288,9 +288,6 @@ public class StringUtil {
      * @description: 通过二分法获取数据下标,日期格式统一为yyyy-MM-dd,使用compare比较,不存在则取右边的
      */
     public static Integer getIndexOrRight(String[][] arrData,String date){
-        if(date.compareTo(arrData[0][0]) < 0){
-            return 0 ;
-        }
         int n = arrData.length;
         int left = 0, right = n - 1, ans = n;
         while (left <= right) {
@@ -450,6 +447,10 @@ public class StringUtil {
      */
     public static boolean isBlank(String str){
         return str == null || str.length() == 0;
+    }
+
+    public static boolean isNotBlank(String str){
+        return str != null && str.trim().length() > 0;
     }
 
 

@@ -4,7 +4,6 @@ package club.doctorxiong.api.controller.v1;
 import club.doctorxiong.api.common.CommonResponse;
 import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.dto.FundPositionDTO;
-import club.doctorxiong.api.common.dto.FundShowDataDTO;
 import club.doctorxiong.api.service.FundService;
 import club.doctorxiong.api.common.request.FundRankRequest;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -57,13 +56,13 @@ public class FundController {
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public CommonResponse<List<FundShowDataDTO>> fund(@RequestParam(value = "code") String codeStr) {
+    public CommonResponse<List<FundDTO>> fund(@RequestParam(value = "code") String codeStr) {
         return CommonResponse.OK(fundService.getFundList(codeStr));
     }
 
 
     @RequestMapping(value = "/rank", method = RequestMethod.POST)
-    public CommonResponse<PageData<FundShowDataDTO>> fundRank(@RequestBody FundRankRequest request) {
+    public CommonResponse<PageData<FundDTO>> fundRank(@RequestBody FundRankRequest request) {
         return CommonResponse.OK(fundService.getFundRank(request));
     }
 
@@ -81,7 +80,7 @@ public class FundController {
      * @description: 热门基金返回近年来收益较高且基金规模较大的基金
      */
     @RequestMapping(value = "/hot", method = RequestMethod.GET)
-    public CommonResponse<List<FundShowDataDTO>> hotRank() {
+    public CommonResponse<List<FundDTO>> hotRank() {
         FundRankRequest request = new FundRankRequest();
         request.setSe(100);
         request.setSc("3y");

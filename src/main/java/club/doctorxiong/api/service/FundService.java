@@ -1,39 +1,22 @@
 package club.doctorxiong.api.service;
 
 
-import club.doctorxiong.api.common.InnerException;
-import club.doctorxiong.api.common.LocalDateTimeFormatter;
-import club.doctorxiong.api.common.RedisKeyConstants;
 import club.doctorxiong.api.common.page.PageData;
-import club.doctorxiong.api.component.CommonDataComponent;
-import club.doctorxiong.api.component.ExpireComponent;
 import club.doctorxiong.api.component.FundComponent;
 import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.dto.FundExpectDataDTO;
 import club.doctorxiong.api.common.dto.FundPositionDTO;
-import club.doctorxiong.api.common.dto.FundShowDataDTO;
 import club.doctorxiong.api.common.request.FundRankRequest;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import club.doctorxiong.api.uitls.StringUtil;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static club.doctorxiong.api.common.RedisKeyConstants.getFundExpectKey;
-import static club.doctorxiong.api.uitls.LambdaUtil.mapWrapper;
 
 
 /**
@@ -61,11 +44,11 @@ public class FundService {
     public FundDTO getFund(String fundCode, LocalDate startDate, LocalDate endDate) {
 
         FundDTO fundDTODetail = fundComponent.fundCache.get(fundCode);
+        if(!fundDTODetail.validFund()){
+            return fundDTODetail;
+        }
         if (!HUO_BI_TYPE.equals(fundDTODetail.getType())) {
             fundDTODetail.setExpectData(getFundExpect(fundCode));
-        }
-        if(fundDTODetail.getNetWorthData() == null && fundDTODetail.getMillionCopiesIncomeData() == null){
-            return fundDTODetail;
         }
         try {
             if (startDate != null || endDate != null) {
@@ -92,8 +75,7 @@ public class FundService {
     }
 
     public List<FundDTO> getFundList(String codeStr, LocalDate startDate, LocalDate endDate){
-        return Arrays.asList(codeStr.split(",")).stream().limit(50).map(
-                mapWrapper(code->getFund(code,startDate,endDate))).filter(Objects::nonNull).collect(Collectors.toList());
+        return Arrays.asList(codeStr.split(",")).stream().limit(50).map(code->getFund(code,startDate,endDate)).filter(FundDTO::validFund).collect(Collectors.toList());
     }
 
 
@@ -104,8 +86,7 @@ public class FundService {
      * @return: FundExpectData
      */
     public FundExpectDataDTO getFundExpect(String fundCode) {
-        FundExpectDataDTO fundExpectDataDTO = fundComponent.fundExpectCache.get(fundCode);
-        return fundExpectDataDTO;
+        return fundComponent.fundExpectCache.get(fundCode);
     }
 
 
@@ -117,18 +98,16 @@ public class FundService {
      * @date: 2020/5/16 18:54
      * @description:
      */
-    public List<FundShowDataDTO> getFundList(String str) {
+    public List<FundDTO> getFundList(String str) {
         String[] arr = str.split(",");
         if (arr.length > 50) {
             arr = Arrays.copyOfRange(arr, 0, 50);
         }
-        return Arrays.asList(arr).stream().map(
-            mapWrapper(e->new FundShowDataDTO(getFund(e,null,null)))
-        ).filter(Objects::nonNull).collect(Collectors.toList());
+        return Arrays.asList(arr).stream().map(e->getFund(e,null,null)).filter(FundDTO::validFund).collect(Collectors.toList());
     }
 
-    public PageData<FundShowDataDTO> getFundRank(FundRankRequest request) {
-        PageData<FundShowDataDTO> stockRank =  fundComponent.fundRankCache.get(request);
+    public PageData<FundDTO> getFundRank(FundRankRequest request) {
+        PageData<FundDTO> stockRank = fundComponent.fundRankCache.get(request);
         stockRank.getRank().forEach(fundShowDataDTO -> {
             fundShowDataDTO.setExpectData(getFundExpect(fundShowDataDTO.getCode()));
         });

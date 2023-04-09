@@ -4,6 +4,7 @@ import club.doctorxiong.api.common.InnerException;
 import club.doctorxiong.api.common.LocalDateTimeFormatter;
 import club.doctorxiong.api.common.RedisKeyConstants;
 import club.doctorxiong.api.common.dto.IndustryDetailDTO;
+import club.doctorxiong.api.common.dto.KLineDTO;
 import club.doctorxiong.api.common.dto.StockDTO;
 import club.doctorxiong.api.common.request.KLineRequest;
 import club.doctorxiong.api.common.request.StockRankRequest;
@@ -78,6 +79,7 @@ public class StockService  {
     }
 
 
+
     /**
      * @param type 区分复权数据
      * @name: getKLine
@@ -94,7 +96,11 @@ public class StockService  {
         //key规则,股票代码+d(日),w(周),m(月)+0(不复权),1(前复权),2(后复权)
         stockCode = StringUtil.getTotalStockCode(stockCode);
         //K线数据为两部分组成,历史K线和当日K线,当日K线为实时K线数据一般由当日分时数据
-        String[][] kLineData = stockComponent.KLineCache.get(new KLineRequest(type,stockCode)).getArrData();
+        KLineDTO kLineDTO = stockComponent.KLineCache.get(new KLineRequest(type,stockCode));
+        String[][] kLineData = kLineDTO.getArrData();
+        if(kLineData == null || kLineData.length == 0){
+            return new String[0][];
+        }
         StockDTO stockDTO = getStock(stockCode);
         LocalDate stockDate = stockDTO.getDate().toLocalDate();
         if(kLineData.length == 0){
@@ -125,10 +131,12 @@ public class StockService  {
      * @description:
      */
     public String[][] getDateRangeData(String stockCode, LocalDate startDate, LocalDate endDate, int type, boolean week) {
-        LocalDateTime now = LocalDateTime.now();
         //不同K线的编码格式,股票代码+d(日),w(周),m(月)+0(不复权),1(前复权),2(后复权)
         stockCode = StringUtil.getTotalStockCode(stockCode);
         String[][] kLineData = getDayData(stockCode, null, null, type);
+        if(kLineData.length == 0){
+            return kLineData;
+        }
         Map<Integer, String[]> map = new HashMap<>();
         Calendar calendar = Calendar.getInstance();
         Arrays.asList(kLineData).stream().forEach(arr -> {
@@ -224,13 +232,11 @@ public class StockService  {
         if (arr.length > 100) {
             arr = Arrays.copyOfRange(arr, 0, 100);
         }
-        return Arrays.asList(arr).parallelStream().map(
-                LambdaUtil.mapWrapper(e -> {
-                    StockDTO stockDTO = getStock(e);
-                    stockDTO.setMinData(null);
-                    return stockDTO;
-                })
-        ).filter(Objects::nonNull).collect(Collectors.toList());
+        return Arrays.asList(arr).parallelStream().map(e -> {
+            StockDTO one = getStock(e);
+            one.setMinData(null);
+            return one;
+        }).filter(StockDTO::validStock).collect(Collectors.toList());
     }
 
 

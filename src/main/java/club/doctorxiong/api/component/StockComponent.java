@@ -59,10 +59,16 @@ public class StockComponent {
         @Override
         public long expireAfterCreate(String key, StockDTO stockDTO, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
-            if (stockDTO.getDataFail() == 1) {
-                log.error(String.format("stockCache 缓存失败,五分钟后过期 code{%s}", key));
+            if (stockDTO.getRequestFail() == 1) {
+                log.error(String.format("stockCache 请求失败,五分钟后过期 code{%s}", key));
                 return TimeUnit.MINUTES.toNanos(5);
             }
+
+            if (stockDTO.getResolveFail() == 1) {
+                log.error(String.format("stockCache 解析失败,当天过期 code{%s}", key));
+                return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
+            }
+
             if (LocalDate.now().getDayOfWeek().getValue() > 5) {
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
@@ -102,9 +108,13 @@ public class StockComponent {
         @Override
         public long expireAfterCreate(KLineRequest key, KLineDTO value, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
-            if (value.getDataFail() == 1) {
-                log.error(String.format("KLineDTO 缓存失败,五分钟后过期 code{%s}", key));
+            if (value.getRequestFail() == 1) {
+                log.error(String.format("KLineDTO 请求失败,五分钟后过期 code{%s}", key));
                 return TimeUnit.MINUTES.toNanos(5);
+            }
+            if (value.getResolveFail() == 1) {
+                log.error(String.format("KLineDTO 解析失败,当天过期 code{%s}", key));
+                return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
             if (LocalDate.now().getDayOfWeek().getValue() > 5) {
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
@@ -160,9 +170,10 @@ public class StockComponent {
             }
             stockDTO.setMinData(minList);
         } catch (IOException e) {
-            stockDTO.setDataFail(1);
+            stockDTO.setRequestFail(1);
             log.error(String.format("StockDTO http connect fail! connect url{%s},error message{%s}", stockUrl, e.getMessage()));
         } catch (Exception e) {
+            stockDTO.setResolveFail(1);
             log.error(String.format("StockDTO data resolve fail! connect url{%s},error message{%s}", stockUrl, e.getMessage()));
         }
         return stockDTO;
@@ -206,9 +217,10 @@ public class StockComponent {
             String klineData = data.containsKey(key) ? data.getString(key) : data.getString("day");
             kLineDTO.setArrData(JSON.parseObject(klineData, String[][].class));
         } catch (IOException e) {
-            kLineDTO.setDataFail(1);
+            kLineDTO.setRequestFail(1);
             log.error(String.format("KLineData http connect fail! connect url{%s},error message{%s}", stockUrl, e.getMessage()));
         } catch (Exception e) {
+            kLineDTO.setResolveFail(1);
             log.error(String.format("KLineData data resolve fail! connect url{%s},error message{%s}", stockUrl, e.getMessage()));
         }
         return kLineDTO;
@@ -251,7 +263,7 @@ public class StockComponent {
         @Override
         public long expireAfterCreate(StockRankRequest stockRankRequest, PageData<StockDTO> stockDTOPageData, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
-            if (stockDTOPageData.getDataFail() == 1) {
+            if (stockDTOPageData.getRequestFail() == 1) {
                 log.error("stackRank 缓存失败,五分钟后过期");
                 return TimeUnit.MINUTES.toNanos(5);
             }
@@ -304,7 +316,7 @@ public class StockComponent {
                     })
             ).filter(Objects::nonNull).collect(Collectors.toList()));
         } catch (IOException e) {
-            stockRank.setDataFail(1);
+            stockRank.setRequestFail(1);
             log.error(String.format("StockRank http connect fail! connect url{%s},error message{%s}", requestUrl, e.getMessage()));
         } catch (Exception e) {
             log.error(String.format("StockRank data resolve fail! connect url{%s},error message{%s}", requestUrl, e.getMessage()));
