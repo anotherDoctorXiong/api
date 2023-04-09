@@ -79,7 +79,7 @@ public class WebCommonConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 定义过滤拦截的url名称，拦截所有请求
-        // registry.addInterceptor(this.getInterceptor()).addPathPatterns("/**");
+        registry.addInterceptor(this.getInterceptor()).addPathPatterns("/**");
         // 定义登录权限校验拦截器
         registry.addInterceptor(this.authInterceptor()).addPathPatterns("/**")
                 .excludePathPatterns("/order/**");
