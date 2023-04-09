@@ -9,6 +9,8 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Map;
 
 /**
@@ -21,6 +23,7 @@ public class CommonHttpInterceptor extends HandlerInterceptorAdapter {
 
     private static final String UNKNOWN = "unknown";
     private static final String MONITOR_HEALTH = "/monitor/health";
+    private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -53,13 +56,20 @@ public class CommonHttpInterceptor extends HandlerInterceptorAdapter {
         // 对方公网IP
         String cIp = CommonHttpInterceptor.getIpAddress(request);
         long end = System.currentTimeMillis();
-
+        String traceId = generateTraceId();
+        MDC.put("traceId", traceId);
         log.info(String.format(
-                "应用请求参数  url: %s, method: %s, query-params: %s, body-params: %s, headers-params: %s, c-ip: %s, run-time: %s",
-                url, method, queryString, bodyParams, headersParams, cIp, (end - start) + ""));
+                "应用请求参数  url: %s, method: %s, query-params: %s, body-params: %s, headers-params: %s, c-ip: %s, run-time: %s, traceId: %s",
+                url, method, queryString, bodyParams, headersParams, cIp, (end - start) ,traceId + ""));
 
         return true;
     }
+    private String generateTraceId() {
+        byte[] randomBytes = new byte[10];
+        new SecureRandom().nextBytes(randomBytes);
+        return ENCODER.encodeToString(randomBytes);
+    }
+
 
     /**
      * 获取用户真实IP地址
