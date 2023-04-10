@@ -237,7 +237,7 @@ public class StockService  {
         if (arr.length > 100) {
             arr = Arrays.copyOfRange(arr, 0, 100);
         }
-        return Arrays.asList(arr).parallelStream().map(e -> {
+        return Arrays.asList(arr).stream().map(e -> {
             StockDTO one = getStock(e);
             one.setMinData(null);
             return one;

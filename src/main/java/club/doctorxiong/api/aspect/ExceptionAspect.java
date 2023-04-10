@@ -31,6 +31,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class ExceptionAspect {
 
+
     @ResponseBody
     @ValidateOnExecution
     @ExceptionHandler({BindException.class, MissingServletRequestParameterException.class, UnexpectedTypeException.class, TypeMismatchException.class})
@@ -145,6 +146,7 @@ public class ExceptionAspect {
     public CommonResponse handleException(HttpServletRequest req, Exception ex) {
         // 错误直接抛出
         log.error("系统内部异常 请求信息:"+ RequestContext.getRequest() + "异常信息:" + ex.getMessage());
+        ex.printStackTrace();
         CommonResponse response = new CommonResponse();
         response.setCode(CommonResponse.Code.ERROR);
         response.setMessage("系统繁忙,请稍后再试");

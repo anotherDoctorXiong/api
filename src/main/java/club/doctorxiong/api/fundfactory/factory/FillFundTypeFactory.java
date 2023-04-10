@@ -3,6 +3,7 @@ package club.doctorxiong.api.fundfactory.factory;
 import club.doctorxiong.api.fundfactory.FillFundDetailFactoryService;
 import club.doctorxiong.api.fundfactory.FundDetailInterface;
 import club.doctorxiong.api.common.dto.FundDTO;
+import club.doctorxiong.api.fundfactory.FundOptionalEnum;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,6 @@ public class FillFundTypeFactory implements FundDetailInterface , InitializingBe
 
     @Override
     public void afterPropertiesSet()  {
-        // fillFundDetailFactoryService.registerOnFactory(FundOptionalEnum.FUND_HB.getOptionalName(),this);
+        fillFundDetailFactoryService.registerOnFactory(FundOptionalEnum.FUND_HB.getOptionalName(),this);
     }
 }

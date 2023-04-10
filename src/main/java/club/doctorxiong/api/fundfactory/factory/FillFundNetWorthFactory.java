@@ -59,6 +59,6 @@ public class FillFundNetWorthFactory implements FundDetailInterface , Initializi
 
     public static String[][] jsonToTwoArr2(JSONArray jsonArray) {
         List<NetWorthDataDTO> list = jsonArray.toJavaList(NetWorthDataDTO.class);
-        return list.parallelStream().map(netWorthDataDTO -> netWorthDataDTO.getDataArr()).collect(Collectors.toList()).toArray(new String[list.size()][4]);
+        return list.stream().map(netWorthDataDTO -> netWorthDataDTO.getDataArr()).collect(Collectors.toList()).toArray(new String[list.size()][4]);
     }
 }

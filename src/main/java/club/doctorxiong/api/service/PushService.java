@@ -171,7 +171,7 @@ public class PushService {
         if(stringBuffer.length() == 0){
             return;
         }
-        emails.parallelStream().forEach( email -> {
+        emails.stream().forEach( email -> {
             messageService.sendMimeMessage(email.getEmail(), "每日资讯", stringBuffer.toString());
         });
 

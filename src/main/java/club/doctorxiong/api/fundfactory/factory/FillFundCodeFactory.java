@@ -25,9 +25,7 @@ public class FillFundCodeFactory implements FundDetailInterface, InitializingBea
     @Override
     public void fillFundDetail(String input, FundDTO fundDTODetail) {
         fundDTODetail.setCode(StringUtil.getSubValue(input));
-        if(CommonDataComponent.fundCodeAndTypeMap.containsKey(fundDTODetail.getCode())){
-            fundDTODetail.setType(CommonDataComponent.fundCodeAndTypeMap.get(fundDTODetail.getCode()));
-        }else {
+        if(StringUtil.isBlank(fundDTODetail.getFundType())){
             fundDTODetail.setType(StringUtil.getTypeFromName(fundDTODetail.getName()));
         }
     }
