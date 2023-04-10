@@ -144,7 +144,7 @@ public class ExceptionAspect {
     @ExceptionHandler(Exception.class)
     public CommonResponse handleException(HttpServletRequest req, Exception ex) {
         // 错误直接抛出
-        log.error("系统内部异常 请求信息:%s"+ RequestContext.getRequest());
+        log.error("系统内部异常 请求信息:"+ RequestContext.getRequest() + "异常信息:" + ex.getMessage());
         CommonResponse response = new CommonResponse();
         response.setCode(CommonResponse.Code.ERROR);
         response.setMessage("系统繁忙,请稍后再试");
