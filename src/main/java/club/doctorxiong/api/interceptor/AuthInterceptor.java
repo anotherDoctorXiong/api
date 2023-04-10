@@ -11,6 +11,7 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.util.StringUtils;
@@ -18,8 +19,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
@@ -48,6 +49,8 @@ public class AuthInterceptor implements HandlerInterceptor {
     private Map<String, Integer> tokenType = new ConcurrentHashMap();
 
 
+
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String remoteAddr = CommonHttpInterceptor.getIpAddress(request);
@@ -71,7 +74,7 @@ public class AuthInterceptor implements HandlerInterceptor {
                     if (tokenData == null) {
                         responseMessage(response, CommonResponse.FAIL("无效的token"));
                         return false;
-                    } else if (tokenData.getEndDate().compareTo(LocalDateTime.now()) < 0) {
+                    } else if (tokenData.getEndDate().compareTo(LocalDate.now()) < 0) {
                         responseMessage(response, CommonResponse.FAIL("过期的token,请续费"));
                         return false;
                     } else {
@@ -115,4 +118,5 @@ public class AuthInterceptor implements HandlerInterceptor {
         out.flush();
         out.close();
     }
+
 }

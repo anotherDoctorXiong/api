@@ -22,6 +22,7 @@ import club.doctorxiong.api.uitls.StringUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
@@ -163,7 +164,7 @@ public class OrderService {
      */
     public void finishTokenOrder(TokenOrderRequest tokenOrderRequest) {
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
         Token exitToken = tokenService.getTokenByPhoneAndType(tokenOrderRequest.getPhone(), tokenOrderRequest.getOrderType());
         // 长时间续费优惠6个月以上赠1个月,1年赠三个月
         if(tokenOrderRequest.getMonthCount() >= 12){
@@ -171,7 +172,7 @@ public class OrderService {
         }else if(tokenOrderRequest.getMonthCount() >= 6){
             tokenOrderRequest.setMonthCount(tokenOrderRequest.getMonthCount() + 1);
         }
-        LocalDateTime expireTime = now.plusMonths(tokenOrderRequest.getMonthCount());
+        LocalDate expireTime = now.plusMonths(tokenOrderRequest.getMonthCount());
         if (exitToken != null) {
             //续费
             if (exitToken.getEndDate().compareTo(now) < 0) {

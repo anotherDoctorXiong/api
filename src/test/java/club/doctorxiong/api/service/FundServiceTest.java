@@ -2,6 +2,8 @@ package club.doctorxiong.api.service;
 import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.page.PageData;
 import club.doctorxiong.api.common.request.FundRankRequest;
+import club.doctorxiong.api.entity.Token;
+import com.alibaba.fastjson.JSONArray;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ActiveProfiles;
@@ -10,7 +12,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.fastjson.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
 * FundServiceTester.
@@ -25,6 +31,8 @@ public class FundServiceTest {
 
     @Autowired
     private FundService fundService;
+    @Autowired
+    private ITokenService tokenService;
 
     private String fundCode = "003634";
 
@@ -43,7 +51,22 @@ public class FundServiceTest {
     }
     @Test
     public void testGetFundListForCodeStrStartDateEndDate() {
-        // System.out.println(JSONObject.toJSONString(fundService.getFundListForCodeStrStartDateEndDate()));
+        List<Token> tokenList = tokenService.list();
+
+        String json = JSONArray.toJSONString(tokenList);
+        System.out.println(json);
+        List<Token> tokens = JSONArray.parseArray(json,Token.class);
+
+        String filePath = "C:\\Users\\xiong\\IdeaProjects\\api\\token.txt";
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(filePath));
+            writer.write(json);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
     @Test
     public void testGetFundExpect() {

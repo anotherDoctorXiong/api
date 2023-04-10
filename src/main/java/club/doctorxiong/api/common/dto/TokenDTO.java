@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -21,16 +22,13 @@ import java.time.LocalDateTime;
 @ToString
 public class TokenDTO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
-    private Integer id;
 
     private String phone;
 
     /**
      * 失效日期
      */
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     /**
      * token

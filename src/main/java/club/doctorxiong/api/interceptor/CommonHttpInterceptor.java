@@ -5,11 +5,16 @@ import club.doctorxiong.api.common.HttpParams;
 import club.doctorxiong.api.common.RequestContext;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Map;
@@ -26,14 +31,12 @@ public class CommonHttpInterceptor extends HandlerInterceptorAdapter {
     private static final String MONITOR_HEALTH = "/monitor/health";
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
 
+
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         long start = System.currentTimeMillis();
         String url = request.getRequestURL().toString();
-        // 接口过滤打印
-        if (url.contains(MONITOR_HEALTH)) {
-            return true;
-        }
 
         String method = request.getMethod();
         String queryString = "";
@@ -109,6 +112,24 @@ public class CommonHttpInterceptor extends HandlerInterceptorAdapter {
         String remoteIp = ip.split(",")[0];
         MDC.put("remote_ip", remoteIp);
         return remoteIp;
+    }
+
+    public static String readFileContent(String fileName) {
+        File file = new File(fileName);
+        BufferedReader reader = null;
+        StringBuffer sbf = new StringBuffer();
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            String tempStr;
+            while ((tempStr = reader.readLine()) != null) {
+                sbf.append(tempStr);
+            }
+            reader.close();
+            return sbf.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sbf.toString();
     }
 }
 
