@@ -16,6 +16,7 @@ import club.doctorxiong.api.uitls.LambdaUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import club.doctorxiong.api.common.page.PageData;
 
 import club.doctorxiong.api.uitls.StringUtil;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -238,8 +240,7 @@ public class StockService  {
             arr = Arrays.copyOfRange(arr, 0, 100);
         }
         return Arrays.asList(arr).stream().map(e -> {
-            StockDTO one = getStock(e);
-            one.setMinData(null);
+            StockDTO one = SerializationUtils.clone(getStock(e));
             return one;
         }).filter(StockDTO::validStock).collect(Collectors.toList());
     }
