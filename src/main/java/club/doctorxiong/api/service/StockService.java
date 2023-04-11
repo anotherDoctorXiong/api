@@ -241,6 +241,7 @@ public class StockService  {
         }
         return Arrays.asList(arr).stream().map(e -> {
             StockDTO one = SerializationUtils.clone(getStock(e));
+            one.setMinData(null);
             return one;
         }).filter(StockDTO::validStock).collect(Collectors.toList());
     }
