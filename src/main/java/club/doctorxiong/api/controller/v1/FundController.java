@@ -43,7 +43,7 @@ public class FundController {
             @RequestParam(required = false, value = "startDate") LocalDate startDate,
             @RequestParam(required = false, value = "endDate")  LocalDate endDate
     ) {
-        return CommonResponse.OK(fundService.getFund(code, startDate, endDate));
+        return CommonResponse.OK(fundService.getFund(code, startDate, endDate, true));
     }
 
     @RequestMapping(value = "/detail/list", method = RequestMethod.GET)

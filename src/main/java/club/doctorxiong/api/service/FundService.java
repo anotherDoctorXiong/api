@@ -44,7 +44,7 @@ public class FundService {
      * @date: 2019/6/23 15:54
      */
 
-    public FundDTO getFund(String fundCode, LocalDate startDate, LocalDate endDate) {
+    public FundDTO getFund(String fundCode, LocalDate startDate, LocalDate endDate,Boolean needHistory) {
         FundDTO fundDTODetail = fundComponent.fundCache.get(fundCode);
         if(!fundDTODetail.validFund()){
             return fundDTODetail;
@@ -53,29 +53,36 @@ public class FundService {
             fundDTODetail.setExpectData(getFundExpect(fundCode));
         }
 
-        if (startDate != null || endDate != null) {
-            fundDTODetail = SerializationUtils.clone(fundDTODetail);
-            if (HUO_BI_TYPE.equals(fundDTODetail.getType())) {
-                int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getMillionCopiesIncomeData(), startDate.toString());
-                int end = endDate == null ? (fundDTODetail.getMillionCopiesIncomeData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getMillionCopiesIncomeData(), endDate.toString());
-                if (end >= start) {
-                    fundDTODetail.setMillionCopiesIncomeData(Arrays.copyOfRange(fundDTODetail.getMillionCopiesIncomeData(), start, end + 1));
-                    fundDTODetail.setSevenDaysYearIncomeData(Arrays.copyOfRange(fundDTODetail.getSevenDaysYearIncomeData(), start, end + 1));
-                }
-            } else {
-                int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getNetWorthData(), startDate.toString());
-                int end = endDate == null ? (fundDTODetail.getNetWorthData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getNetWorthData(), endDate.toString());
-                if (end > start) {
-                    fundDTODetail.setNetWorthData(Arrays.copyOfRange(fundDTODetail.getNetWorthData(), start, end + 1));
-                    fundDTODetail.setTotalNetWorthData(Arrays.copyOfRange(fundDTODetail.getTotalNetWorthData(), start, end + 1));
+        fundDTODetail = SerializationUtils.clone(fundDTODetail);
+        if(needHistory){
+            if (startDate != null || endDate != null) {
+                if (HUO_BI_TYPE.equals(fundDTODetail.getType())) {
+                    int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getMillionCopiesIncomeData(), startDate.toString());
+                    int end = endDate == null ? (fundDTODetail.getMillionCopiesIncomeData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getMillionCopiesIncomeData(), endDate.toString());
+                    if (end >= start) {
+                        fundDTODetail.setMillionCopiesIncomeData(Arrays.copyOfRange(fundDTODetail.getMillionCopiesIncomeData(), start, end + 1));
+                        fundDTODetail.setSevenDaysYearIncomeData(Arrays.copyOfRange(fundDTODetail.getSevenDaysYearIncomeData(), start, end + 1));
+                    }
+                } else {
+                    int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getNetWorthData(), startDate.toString());
+                    int end = endDate == null ? (fundDTODetail.getNetWorthData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getNetWorthData(), endDate.toString());
+                    if (end > start) {
+                        fundDTODetail.setNetWorthData(Arrays.copyOfRange(fundDTODetail.getNetWorthData(), start, end + 1));
+                        fundDTODetail.setTotalNetWorthData(Arrays.copyOfRange(fundDTODetail.getTotalNetWorthData(), start, end + 1));
+                    }
                 }
             }
+        }else {
+            fundDTODetail.setMillionCopiesIncomeData(null);
+            fundDTODetail.setSevenDaysYearIncomeData(null);
+            fundDTODetail.setNetWorthData(null);
+            fundDTODetail.setTotalNetWorthData(null);
         }
         return fundDTODetail;
     }
 
     public List<FundDTO> getFundList(String codeStr, LocalDate startDate, LocalDate endDate){
-        return Arrays.asList(codeStr.split(",")).stream().limit(50).map(code->getFund(code,startDate,endDate)).filter(FundDTO::validFund).collect(Collectors.toList());
+        return Arrays.asList(codeStr.split(",")).stream().limit(50).map(code->getFund(code,startDate,endDate,true)).filter(FundDTO::validFund).collect(Collectors.toList());
     }
 
 
@@ -103,7 +110,7 @@ public class FundService {
         if (arr.length > 50) {
             arr = Arrays.copyOfRange(arr, 0, 50);
         }
-        return Arrays.asList(arr).stream().map(e->getFund(e,null,null)).filter(FundDTO::validFund).collect(Collectors.toList());
+        return Arrays.asList(arr).stream().map(e->getFund(e,null,null,false)).filter(FundDTO::validFund).collect(Collectors.toList());
     }
 
     public PageData<FundDTO> getFundRank(FundRankRequest request) {
