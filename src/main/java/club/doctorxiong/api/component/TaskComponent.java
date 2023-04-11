@@ -52,12 +52,12 @@ public class TaskComponent {
 
 
 
-    /**
+  /*  *//**
      * @name: cacheBoard
      * @auther: 熊鑫
      * @date: 2020/5/9 15:16
      * @description: 处理当天的网站访问情况
-     */
+     *//*
     @Scheduled(cron = "0 5/* * * * ?")
     public void finishTodayVisitTimes(){
         ValueOperations valueOperations=stringRedisTemplate.opsForValue();
@@ -67,7 +67,7 @@ public class TaskComponent {
         }
         visitStatusService.getBaseMapper().insert(new VisitStatus(LocalDate.now(),visitTime));
         stringRedisTemplate.delete(RedisKeyConstants.TOTAL_VISIT_TIMES);
-    }
+    }*/
 
     /**
      * @name: startTrade
