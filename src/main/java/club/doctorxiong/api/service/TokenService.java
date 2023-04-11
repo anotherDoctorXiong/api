@@ -43,7 +43,7 @@ public class TokenService {
         }
     }
 
-    public void updateTokenFile(TokenDTO tokenDTO) {
+   /* public void updateTokenFile(TokenDTO tokenDTO) {
         String filePath = profiles.equals("local")?LOCAL_FILE:PROD_FILE;
         try {
             StringBuilder jsonLine = new StringBuilder();
@@ -97,5 +97,5 @@ public class TokenService {
     public static void main(String[] args) {
         TokenService service = new TokenService();
         service.refreshTokenMap();
-    }
+    }*/
 }
