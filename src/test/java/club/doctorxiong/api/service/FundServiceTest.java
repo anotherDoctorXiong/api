@@ -36,19 +36,8 @@ public class FundServiceTest {
 
     private String fundCode = "003634";
 
-    @Test
-    public void testGetFund() {
-        System.out.println(JSONObject.toJSONString(fundService.getFund(fundCode,null,null)));
-        FundRankRequest request = new FundRankRequest();
-        for (int i = 0; i < 10; i++) {
-            request.setPi(i);
-            PageData<FundDTO> pageData = fundService.getFundRank(request);
-            pageData.getRank().forEach(fundShowDataDTO -> {
-                fundService.getFund(fundShowDataDTO.getCode(), LocalDate.of(2022,10,10),null).toString();
-            });
-        }
 
-    }
+
     @Test
     public void testGetFundListForCodeStrStartDateEndDate() {
         List<Token> tokenList = tokenService.list();
