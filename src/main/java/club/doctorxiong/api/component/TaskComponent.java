@@ -58,7 +58,7 @@ public class TaskComponent {
      * @date: 2020/5/9 15:16
      * @description: 处理当天的网站访问情况
      */
-    @Scheduled(cron = "0 59 23 * * ?")
+    @Scheduled(cron = "0 5/* * * * ?")
     public void finishTodayVisitTimes(){
         ValueOperations valueOperations=stringRedisTemplate.opsForValue();
         Long visitTime=0L;

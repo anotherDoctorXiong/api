@@ -54,7 +54,7 @@ public class FundComponent {
     /**
      * 基金估值缓存
      */
-    public LoadingCache<String, FundExpectDataDTO> fundExpectCache = Caffeine.newBuilder().expireAfter(new Expiry<String, FundExpectDataDTO>() {
+    public LoadingCache<String, FundExpectDataDTO> fundExpectCache = Caffeine.newBuilder().maximumSize(700).expireAfter(new Expiry<String, FundExpectDataDTO>() {
         @Override
         public long expireAfterCreate(String key, FundExpectDataDTO fundExpectDataDTO, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
