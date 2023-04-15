@@ -103,7 +103,7 @@ public class StockComponent {
     /**
      * 股票日k缓存
      */
-    public LoadingCache<KLineRequest, KLineDTO> KLineCache = Caffeine.newBuilder().maximumSize(7000).softValues().expireAfter(new Expiry<KLineRequest, KLineDTO>() {
+    public LoadingCache<KLineRequest, KLineDTO> KLineCache = Caffeine.newBuilder().softValues().expireAfter(new Expiry<KLineRequest, KLineDTO>() {
 
         @Override
         public long expireAfterCreate(KLineRequest key, KLineDTO value, long currentTime) {

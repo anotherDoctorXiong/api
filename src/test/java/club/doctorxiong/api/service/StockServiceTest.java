@@ -42,6 +42,7 @@ public class StockServiceTest {
     }
     @Test
     public void testGetDateRangeData() {
+
         System.out.println(JSONObject.toJSONString(stockService.getDateRangeData("sh000001", LocalDate.of(2022,01,01),LocalDate.of(2023,03,01),1,true)));
         System.out.println(JSONObject.toJSONString(stockService.getStock("000001")));
 

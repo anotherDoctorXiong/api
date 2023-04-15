@@ -120,3 +120,6 @@ public class $testClass {
 }
 #end
 
+-Dcom.sun.management.jmxremote.port=8848 -Dcom.sun.management.jmxremote.rmi.port=8848 -Dcom.sun.management.jmxremote.ssl=false \
+-Dcom.sun.management.jmxremote.authenticate=false -Djava.rmi.server.hostname=8.135.117.119 \
+

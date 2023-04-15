@@ -1,6 +1,7 @@
 package club.doctorxiong.api.component;
 
 
+import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.dto.StockDTO;
 import club.doctorxiong.api.service.*;
 import club.doctorxiong.api.common.RedisKeyConstants;
@@ -30,21 +31,7 @@ import java.util.stream.Collectors;
 public class TaskComponent {
 
     @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-
-
-
-    @Autowired
-    private IVisitStatusService visitStatusService;
-    @Autowired
-    private IDailyIndexDataService dailyIndexDataService;
-
-    @Autowired
-    private IEmailService emailService;
-    @Autowired
-    private StockService stockService;
-    @Autowired
-    private PushService pushService;
+    private FundService fundService;
 
 
 
@@ -57,16 +44,10 @@ public class TaskComponent {
      * @date: 2020/5/9 15:16
      * @description: 处理当天的网站访问情况
      */
-    /*@Scheduled(cron = "0 5/* * * * ?")
+    @Scheduled(cron = "*/10 * * * * ?")
     public void finishTodayVisitTimes(){
-        ValueOperations valueOperations=stringRedisTemplate.opsForValue();
-        Long visitTime=0L;
-        if(stringRedisTemplate.hasKey(RedisKeyConstants.TOTAL_VISIT_TIMES)){
-            visitTime =Long.valueOf(valueOperations.get(RedisKeyConstants.TOTAL_VISIT_TIMES).toString());
-        }
-        visitStatusService.getBaseMapper().insert(new VisitStatus(LocalDate.now(),visitTime));
-        stringRedisTemplate.delete(RedisKeyConstants.TOTAL_VISIT_TIMES);
-    }*/
+
+    }
 
     /**
      * @name: startTrade
@@ -75,21 +56,21 @@ public class TaskComponent {
      */
     @Scheduled(cron = "0 0 19 * * ?")
     public void startPushDailyContent() {
-        LocalDateTime now = LocalDateTime.now();
+       /* LocalDateTime now = LocalDateTime.now();
         List<Email> emailList = emailService.list().stream().filter(v -> v.getEndDate().compareTo(now) > 0).collect(Collectors.toList());
         //pushService.pushJin10Content(emailList);
         StockDTO stockDTO = stockService.getStock("sh000001");
-        /*String[][] arr = stockService.getDayData("sh000001",LocalDate.of(2022,8,1),null,0);
+        *//*String[][] arr = stockService.getDayData("sh000001",LocalDate.of(2022,8,1),null,0);
 
         for (int i = 0; i < arr.length; i++) {
             dailyIndexDataService.updateDailyData(DailyIndexData.builder().date(LocalDate.parse(arr[i][0])).indexData(new BigDecimal(arr[i][2])).build());
-        }*/
+        }*//*
         DailyIndexData dailyIndexData = new DailyIndexData();
         dailyIndexData.setDate(stockDTO.getDate().toLocalDate());
         dailyIndexData.setIndexData(new BigDecimal(stockDTO.getPrice()));
         dailyIndexData.setIndexGrowth(new BigDecimal(stockDTO.getChangePercent()));
         dailyIndexDataService.updateDailyData(dailyIndexData);
         pushService.getMainFunds();
-        pushService.getNorthFunds();
+        pushService.getNorthFunds();*/
     }
 }

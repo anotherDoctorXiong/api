@@ -54,7 +54,7 @@ public class FundComponent {
     /**
      * 基金估值缓存
      */
-    public LoadingCache<String, FundExpectDataDTO> fundExpectCache = Caffeine.newBuilder().maximumSize(700).expireAfter(new Expiry<String, FundExpectDataDTO>() {
+    public LoadingCache<String, FundExpectDataDTO> fundExpectCache = Caffeine.newBuilder().softValues().expireAfter(new Expiry<String, FundExpectDataDTO>() {
         @Override
         public long expireAfterCreate(String key, FundExpectDataDTO fundExpectDataDTO, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
@@ -102,7 +102,7 @@ public class FundComponent {
     /**
      * 基金详情缓存
      */
-    public LoadingCache<String, FundDTO> fundCache = Caffeine.newBuilder().expireAfter(new Expiry<String, FundDTO>() {
+    public LoadingCache<String, FundDTO> fundCache = Caffeine.newBuilder().softValues().expireAfter(new Expiry<String, FundDTO>() {
         @Override
         public long expireAfterCreate(String key, FundDTO fundDTODetail, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
@@ -152,7 +152,7 @@ public class FundComponent {
     /**
      * 获取基金排行的分页数据
      */
-    public LoadingCache<FundRankRequest, PageData<FundDTO>> fundRankCache = Caffeine.newBuilder().expireAfter(new Expiry<FundRankRequest, PageData<FundDTO>>() {
+    public LoadingCache<FundRankRequest, PageData<FundDTO>> fundRankCache = Caffeine.newBuilder().softValues().expireAfter(new Expiry<FundRankRequest, PageData<FundDTO>>() {
         @Override
         public long expireAfterCreate(FundRankRequest key, PageData<FundDTO> pageData, long currentTime) {
             if (pageData.getRequestFail() == 1) {
@@ -176,7 +176,7 @@ public class FundComponent {
     /**
      * 获取基金持仓数据
      */
-    public LoadingCache<String, FundPositionDTO> fundPositionCache = Caffeine.newBuilder().expireAfter(new Expiry<String, FundPositionDTO>() {
+    public LoadingCache<String, FundPositionDTO> fundPositionCache = Caffeine.newBuilder().softValues().expireAfter(new Expiry<String, FundPositionDTO>() {
         @Override
         public long expireAfterCreate(String key, FundPositionDTO fundPositionDTO, long currentTime) {
             if (fundPositionDTO.getRequestFail() == 1) {

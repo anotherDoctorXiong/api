@@ -43,7 +43,8 @@ public class TokenService {
         }
     }
 
-   /* public void updateTokenFile(TokenDTO tokenDTO) {
+
+   /*public void updateTokenFile(TokenDTO tokenDTO) {
         String filePath = profiles.equals("local")?LOCAL_FILE:PROD_FILE;
         try {
             StringBuilder jsonLine = new StringBuilder();
@@ -55,9 +56,31 @@ public class TokenService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
 
-    public void finishTokenOrder(TokenOrderRequest tokenOrderRequest) {
+
+       File fileToModify = new File(LOCAL_FILE);
+       BufferedReader br = new BufferedReader(new FileReader(fileToModify));
+       String line;
+       StringBuilder sb = new StringBuilder();
+
+       // 读取文本文件并找到要修改的行
+       int lineNumber = 1;
+       while ((line = br.readLine()) != null) {
+           if (lineNumber == lineNumberToModify) {
+               line = newText; // 修改行
+           }
+           sb.append(line).append("\n");
+           lineNumber++;
+       }
+       br.close();
+
+       // 将修改后的文本重新写入文件
+       FileWriter writer = new FileWriter(fileToModify);
+       writer.write(sb.toString());
+       writer.close();
+    }*/
+
+    /*public void finishTokenOrder(TokenOrderRequest tokenOrderRequest) {
 
         LocalDate now = LocalDate.now();
         Optional<TokenDTO> tokenOptional = TOKEN_LIST.stream().filter(token -> token.getPhone().equals(tokenOrderRequest.getPhone()) && token.getType().equals(tokenOrderRequest.getOrderType())).findAny();
