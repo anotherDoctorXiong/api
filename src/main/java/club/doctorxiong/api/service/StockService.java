@@ -79,7 +79,9 @@ public class StockService  {
         stockRank.setTotalRecord(allCount);
         List<StockDTO> stockDTOList = new ArrayList<>();
         stockRank.getRank().forEach(stockDTO -> {
-            stockDTOList.add(getStock(stockDTO.getCode()));
+            if(stockDTO.getCode() != null){
+                stockDTOList.add(getStock(stockDTO.getCode()));
+            }
         });
         stockRank.setRank(stockDTOList);
         return stockRank;

@@ -26,4 +26,9 @@ public class KLineRequest {
     public int hashCode(){
         return this.toString().hashCode();
     }
+
+    @Override
+    public boolean equals(Object obj){
+        return this.hashCode() == obj.hashCode();
+    }
 }

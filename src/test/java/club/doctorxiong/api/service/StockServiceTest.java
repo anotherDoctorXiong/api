@@ -33,7 +33,8 @@ public class StockServiceTest {
     }
     @Test
     public void testGetStockRank() {
-        // System.out.println(JSONObject.toJSONString(stockService.getStockRank()));
+        stockService.getStockRank(new StockRankRequest());
+        stockService.getStockRank(new StockRankRequest());
     }
     @Test
     public void testGetDayData() {
