@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class FundService {
+
     @Autowired
     private FundComponent fundComponent;
 

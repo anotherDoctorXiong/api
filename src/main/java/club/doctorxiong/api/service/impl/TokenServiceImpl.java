@@ -10,7 +10,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.Expiry;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements ITokenService {
 
-    public LoadingCache<String, TokenDTO> tokenCache = Caffeine.newBuilder().expireAfterWrite(1,TimeUnit.HOURS).build(key -> getTokenDTO(key));
+    private LoadingCache<String, TokenDTO> tokenCache = Caffeine.newBuilder().expireAfterWrite(1,TimeUnit.HOURS).build(key -> getTokenDTO(key));
 
     private TokenDTO getTokenDTO(String key){
         TokenDTO tokenDTO = BeanUtil.map(getToken(key),TokenDTO.class);
@@ -37,6 +36,16 @@ public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements
         }
         return tokenDTO;
     }
+
+    @Override
+    public TokenDTO getTokenCache(String token) {
+        return tokenCache.get(token);
+    }
+    @Override
+    public void invalidateCache(String token) {
+        tokenCache.invalidate(token);
+    }
+
 
     @Override
     public Token getToken(String token) {

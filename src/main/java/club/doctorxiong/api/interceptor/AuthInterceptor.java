@@ -22,9 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -45,27 +47,20 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class AuthInterceptor implements HandlerInterceptor {
 
-    @Autowired
-    private TokenServiceImpl tokenService;
-
-
-
-    private Map<String, Integer> tokenType = new ConcurrentHashMap();
-
-
-
+    @Resource
+    private ITokenService tokenService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String token = HttpParams.getRequestToken(request);
         if (StringUtils.isEmpty(token)) {
-            TokenDTO ipToken = tokenService.tokenCache.get(CommonHttpInterceptor.getIpAddress(request));
+            TokenDTO ipToken = tokenService.getTokenCache(CommonHttpInterceptor.getIpAddress(request));
             if(!ipToken.tokenRefreshTimes()){
                 responseMessage(response, CommonResponse.FAIL("每小时免费100次,www.doctorxiong.club获得更多"));
                 return false;
             }
         }else {
-            TokenDTO tokenDTO = tokenService.tokenCache.get(token);
+            TokenDTO tokenDTO = tokenService.getTokenCache(token);
             if (tokenDTO.getType().equals(1)) {
                 responseMessage(response, CommonResponse.FAIL("无效的token"));
                 return false;

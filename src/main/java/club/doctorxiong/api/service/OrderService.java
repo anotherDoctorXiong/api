@@ -51,7 +51,7 @@ public class OrderService {
     private MessageService messageService;
 
     @Autowired
-    private TokenServiceImpl tokenService;
+    private ITokenService tokenService;
 
     // 用价格来区分订单 所以一个价格当前只能使用一次
     public Cache<String, String> priceLock = Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
@@ -163,7 +163,7 @@ public class OrderService {
             }
             //清除该token当天的限制缓存,防止续费后仍提示过期。
             tokenService.saveOrUpdate(exitToken);
-            tokenService.tokenCache.refresh(exitToken.getToken());
+            tokenService.invalidateCache(exitToken.getToken());
         } else {
             //订购token服务
             String token = StringUtil.getRandomString(10);
@@ -242,7 +242,7 @@ public class OrderService {
         //订购token服务
         String token = StringUtil.getRandomString(10);
         while (tokenService.getToken(token) != null) {
-            tokenService.tokenCache.invalidate(token);
+            tokenService.invalidateCache(token);
             token = StringUtil.getRandomString(10);
         }
         Token order = new Token();
