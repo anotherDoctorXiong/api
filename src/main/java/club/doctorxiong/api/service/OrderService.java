@@ -106,9 +106,8 @@ public class OrderService {
             return;
         } else {
             //更新订单信息
-            currentOrder.setPaySuccess(true);
             finishTokenOrder(currentOrder);
-            orderRequestCache.invalidate(result.getMoney());
+            currentOrder.setPaySuccess(true);
         }
     }
 
