@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @ToString
-public class TokenDTO implements Serializable {
+public class TokenDTO {
 
 
     private String phone;
@@ -39,5 +39,32 @@ public class TokenDTO implements Serializable {
      * 1，2，3
      */
     private Integer type;
+
+    /**
+     * 访问次数
+     */
+    private Integer times = 0;
+
+    public TokenDTO(String ip) {
+        this.token = ip;
+        this.type = 1;
+    }
+
+    /**
+     * token 访问
+     */
+    public boolean tokenRefreshTimes(){
+        this.times ++;
+        if(this.type.equals(1) && this.times > 10){
+            return false;
+        }
+        if(this.type.equals(3) && this.times > 20){
+            return false;
+        }
+        return true;
+    }
+
+
+
 
 }

@@ -52,4 +52,5 @@ public class Token implements Serializable {
         this.token = token;
         this.type = type;
     }
+
 }

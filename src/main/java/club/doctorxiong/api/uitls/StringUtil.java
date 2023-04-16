@@ -138,18 +138,6 @@ public class StringUtil {
             };
         }).collect(Collectors.toList()).toArray(new String[jsonArr.size()][2]);
     }
-    /**
-     * @name: jsonToTwoArr
-     * @auther: 熊鑫
-     * @param jsonArray
-     * @return: java.lang.Object[][]
-     * @date: 2019/6/24 12:34
-     * @description: 数组嵌套key-value的json丢弃key
-     */
-    /*public static String[][] jsonToTwoArr2(JSONArray jsonArray) {
-        List<NetWorthDataDTO> list = jsonArray.toJavaList(NetWorthDataDTO.class);
-        return list.parallelStream().map(netWorthDataDTO -> netWorthDataDTO.getDataArr()).collect(Collectors.toList()).toArray(new String[list.size()][4]);
-    }*/
 
     /**
      * @name: getTotalStockCode
@@ -259,9 +247,6 @@ public class StringUtil {
      *
      */
     public static Integer getIndexOrLeft(String[][] arrData,String date){
-      /*  if(date.compareTo(arrData[arrData.length-1][0]) > 0){
-            return -1;
-        }*/
         int n = arrData.length;
         int left = 0, right = n - 1, ans = n;
         while (left <= right) {
@@ -289,9 +274,6 @@ public class StringUtil {
      * @description: 通过二分法获取数据下标,日期格式统一为yyyy-MM-dd,使用compare比较,不存在则取右边的
      */
     public static Integer getIndexOrRight(String[][] arrData,String date){
-       /* if(date.compareTo(arrData[0][0]) < 0){
-            return -1;
-        }*/
         int n = arrData.length;
         int left = 0, right = n - 1, ans = n;
         while (left <= right) {

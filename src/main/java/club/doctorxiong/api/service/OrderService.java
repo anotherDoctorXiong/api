@@ -1,7 +1,6 @@
 package club.doctorxiong.api.service;
 
 
-
 import club.doctorxiong.api.common.InnerException;
 import club.doctorxiong.api.common.LocalDateTimeFormatter;
 import club.doctorxiong.api.entity.Email;
@@ -12,7 +11,10 @@ import club.doctorxiong.api.common.dto.UserOrderListDTO;
 import club.doctorxiong.api.common.request.EmailOrderRequest;
 import club.doctorxiong.api.common.request.PhonePayCallBackRequest;
 import club.doctorxiong.api.common.request.TokenOrderRequest;
+import club.doctorxiong.api.service.impl.TokenServiceImpl;
 import club.doctorxiong.api.uitls.BeanUtil;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,7 +29,6 @@ import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 
-
 /**
  * @Auther: 熊鑫
  * @Date: 2020/1/8 21
@@ -38,13 +39,10 @@ import java.util.concurrent.TimeUnit;
 public class OrderService {
 
     //使用AES-128-CBC加密模式，key需要为16位,key和iv可以相同，也可以不同!
-    private static String KEY="aaDJL2d9DfhLZO0z";
-    private static String IV="412ADDSSFA342442";
+    private static String KEY = "aaDJL2d9DfhLZO0z";
+    private static String IV = "412ADDSSFA342442";
 
-    private static BigDecimal interval=new BigDecimal("0.10");
-
-    @Autowired
-    private ITokenService tokenService;
+    private static BigDecimal interval = new BigDecimal("0.10");
 
     @Autowired
     private IEmailService emailService;
@@ -53,7 +51,14 @@ public class OrderService {
     private MessageService messageService;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private TokenServiceImpl tokenService;
+
+    // 用价格来区分订单 所以一个价格当前只能使用一次
+    public Cache<String, String> priceLock = Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
+
+    // 每个订单请求保留五分钟等回调
+    public Cache<BigDecimal, TokenOrderRequest> orderRequestCache = Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
+
 
     /**
      * @param order
@@ -65,27 +70,20 @@ public class OrderService {
      */
     public OrderResultDTO createTokenOrder(TokenOrderRequest order) {
 
-        OrderResultDTO result=new OrderResultDTO();
-        ValueOperations valueOperation = redisTemplate.opsForValue();
-
+        OrderResultDTO result = new OrderResultDTO();
         //检测手机号码
         if (!StringUtil.isPhone(order.getPhone())) {
             InnerException.exInvalidParam("无效的手机号码");
         }
 
-        //给当前订单上锁,防止重复下单
-        if (valueOperation.get(order.getPhone()) != null) {
-            InnerException.exInvalidParam("您有未支付的订单正在处理,请几分钟后再次尝试");
-        } else {
-            redisTemplate.opsForValue().set(order.getPhone(), 1, 5 * 60, TimeUnit.SECONDS);
-        }
         //type-3(10块)type-2(20块)目前只有两种
-        BigDecimal price=new BigDecimal((order.getOrderType()==3?10:20)*order.getMonthCount()).setScale(2,RoundingMode.UP);
+        BigDecimal price = new BigDecimal((order.getOrderType() == 3 ? 10 : 20) * order.getMonthCount()).setScale(2, RoundingMode.UP);
         //生成唯一订单价格
-        while (valueOperation.get(price.toString() + order.isPayMode()) != null) {
-            price=price.subtract(interval);
-            if(price.compareTo(BigDecimal.ZERO)==-1){
-                InnerException.exInvalidParam("当前支付人数过多,请几分钟后再次尝试");
+        int tryTimes = 0;
+        while (priceLock.getIfPresent(price) != null) {
+            price = price.subtract(interval);
+            if (tryTimes ++ > 3) {
+                InnerException.exInvalidParam("请几分钟后再次尝试");
             }
         }
 
@@ -93,65 +91,46 @@ public class OrderService {
         result.setPayMode(order.isPayMode());
         result.setPhone(order.getPhone());
         result.setCreateTime(LocalDateTimeFormatter.getTimeNow());
-        log.info("创建待支付订单:" + price.toString() + order.isPayMode());
+        log.info("创建待支付订单:" + price.toString());
 
         //订单设置为未支付状态
         order.setPaySuccess(false);
-        redisTemplate.opsForValue().set(price.toString() + order.isPayMode(), order, 5 * 60, TimeUnit.SECONDS);
+        orderRequestCache.put(price,order);
         return result;
     }
 
-    public void setPayResult(PhonePayCallBackRequest result)  {
-
-        BigDecimal payMoney=result.getMoney();
-        ValueOperations valueOperations=redisTemplate.opsForValue();
-        String key=payMoney.toString()+ "alipay".equals(result.getType());
-        TokenOrderRequest currentOrder=(TokenOrderRequest)valueOperations.get(key);
-        if(currentOrder==null){
-            log.error("发现无法处理的订单（及时退款或人工处理）_"+result );
+    public void setPayResult(PhonePayCallBackRequest result) {
+        TokenOrderRequest currentOrder = orderRequestCache.getIfPresent(result.getMoney());
+        if (currentOrder == null) {
+            log.error("发现无法处理的订单（及时退款或人工处理）_" + result);
             return;
-        }else {
+        } else {
             //更新订单信息
             currentOrder.setPaySuccess(true);
             finishTokenOrder(currentOrder);
-            redisTemplate.delete(currentOrder.getPhone());
-            valueOperations.set(key,currentOrder,valueOperations.getOperations().getExpire(key, TimeUnit.SECONDS),TimeUnit.SECONDS);
+            orderRequestCache.invalidate(result.getMoney());
         }
     }
 
     /**
-     * @name: getTokenOrderStatus
-     * @auther: 熊鑫
-     * @param payId
-     * @return: boolean
-     * @date: 2020/10/11 11:47
-     * @description: 查询订单是否支付成功,前端采用轮询的查询方式
+     * @description: 查询订单是否支付成功, 前端采用轮询的查询方式
      */
-    public boolean getPayStatus(String payId){
-        TokenOrderRequest order=(TokenOrderRequest)redisTemplate.opsForValue().get(payId);
-        boolean result=order!=null?order.isPaySuccess():false;
-        if(result){
-            redisTemplate.delete(payId);
+    public boolean getPayStatus(BigDecimal price) {
+        TokenOrderRequest order = orderRequestCache.getIfPresent(price);
+        boolean result = order != null ? order.isPaySuccess() : false;
+        if (result) {
+            orderRequestCache.invalidate(price);
         }
         return result;
     }
 
     /**
-     * @name: orderCancel
-     * @auther: 熊鑫
-     * @param payId
-     * @return: void
-     * @date: 2020/10/11 14:21
      * @description: 取消支付
      */
-    public void payCancel(String payId){
-        log.info("取消支付"+payId);
+    public void payCancel(BigDecimal price) {
         //删除订单锁
-        TokenOrderRequest order=(TokenOrderRequest)redisTemplate.opsForValue().get(payId);
-        if(order!=null){
-            redisTemplate.delete(order.getPhone());
-        }
-        redisTemplate.delete(payId);
+        TokenOrderRequest order = orderRequestCache.getIfPresent(price);
+        orderRequestCache.invalidate(price);
     }
 
     /**
@@ -167,9 +146,9 @@ public class OrderService {
         LocalDate now = LocalDate.now();
         Token exitToken = tokenService.getTokenByPhoneAndType(tokenOrderRequest.getPhone(), tokenOrderRequest.getOrderType());
         // 长时间续费优惠6个月以上赠1个月,1年赠三个月
-        if(tokenOrderRequest.getMonthCount() >= 12){
+        if (tokenOrderRequest.getMonthCount() >= 12) {
             tokenOrderRequest.setMonthCount(tokenOrderRequest.getMonthCount() + 3);
-        }else if(tokenOrderRequest.getMonthCount() >= 6){
+        } else if (tokenOrderRequest.getMonthCount() >= 6) {
             tokenOrderRequest.setMonthCount(tokenOrderRequest.getMonthCount() + 1);
         }
         LocalDate expireTime = now.plusMonths(tokenOrderRequest.getMonthCount());
@@ -183,38 +162,38 @@ public class OrderService {
                 exitToken.setEndDate(exitToken.getEndDate().plusMonths(tokenOrderRequest.getMonthCount()));
             }
             //清除该token当天的限制缓存,防止续费后仍提示过期。
-            redisTemplate.delete(exitToken.getToken());
             tokenService.saveOrUpdate(exitToken);
+            tokenService.tokenCache.refresh(exitToken.getToken());
         } else {
             //订购token服务
             String token = StringUtil.getRandomString(10);
             while (tokenService.getToken(token) != null) {
                 token = StringUtil.getRandomString(10);
             }
-            Token newToken = new Token(tokenOrderRequest.getPhone(),expireTime, token, tokenOrderRequest.getOrderType());
+            Token newToken = new Token(tokenOrderRequest.getPhone(), expireTime, token, tokenOrderRequest.getOrderType());
             tokenService.save(newToken);
         }
-        log.info(tokenOrderRequest.getPhone()+"_充值成功服务为期_"+ tokenOrderRequest.getMonthCount()+"个月");
+        log.info(tokenOrderRequest.getPhone() + "_充值成功服务为期_" + tokenOrderRequest.getMonthCount() + "个月");
     }
 
     public void finishEmailOrder(EmailOrderRequest emailOrderRequest) {
         //校验邮箱
-        if(!StringUtil.isEmail(emailOrderRequest.getEmail())){
+        if (!StringUtil.isEmail(emailOrderRequest.getEmail())) {
             InnerException.exInvalidParam("无效的邮箱");
         }
 
-        if(!redisTemplate.hasKey(emailOrderRequest.getEmail())||!emailOrderRequest.getCaptcha().equals(redisTemplate.opsForValue().get(emailOrderRequest.getEmail()))){
+       /* if (!redisTemplate.hasKey(emailOrderRequest.getEmail()) || !emailOrderRequest.getCaptcha().equals(redisTemplate.opsForValue().get(emailOrderRequest.getEmail()))) {
             InnerException.exInvalidParam("邮箱验证失败");
-        }
+        }*/
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expireTime = now.plusMonths(emailOrderRequest.getMonthCount());
 
         Email exitEmail = emailService.getEmail(emailOrderRequest.getEmail());
-        if(exitEmail != null){
-            LocalDateTime indexTime = exitEmail.getEndDate().compareTo(LocalDateTime.now()) > 0? exitEmail.getEndDate():LocalDateTime.now();
+        if (exitEmail != null) {
+            LocalDateTime indexTime = exitEmail.getEndDate().compareTo(LocalDateTime.now()) > 0 ? exitEmail.getEndDate() : LocalDateTime.now();
             exitEmail.setEndDate(indexTime.plusMonths(emailOrderRequest.getMonthCount()));
             emailService.updateById(exitEmail);
-        }else {
+        } else {
             Email email = new Email();
             email.setEmail(emailOrderRequest.getEmail());
             email.setEndDate(LocalDateTime.now().plusMonths(emailOrderRequest.getMonthCount()));
@@ -222,61 +201,48 @@ public class OrderService {
         }
         //发送订购或续订通知
         try {
-            messageService.sendMimeMessage(emailOrderRequest.getEmail(),"小熊同学","获取每日资讯服务"
-                    + emailOrderRequest.getMonthCount()+"个月");
+            messageService.sendMimeMessage(emailOrderRequest.getEmail(), "小熊同学", "获取每日资讯服务"
+                    + emailOrderRequest.getMonthCount() + "个月");
         } catch (Exception e) {
             log.info("发送邮件失败");
         }
     }
 
-    public void cancelEmailOrder(Integer orderId) {
-        Email email=emailService.getById(orderId);
-        if(email==null){
+    /*public void cancelEmailOrder(Integer orderId) {
+        Email email = emailService.getById(orderId);
+        if (email == null) {
             InnerException.exInvalidParam("无效的订单");
         }
         emailService.removeById(orderId);
-    }
+    }*/
 
     public UserOrderListDTO getOrder(String query) {
         try {
-            query= StringUtil.phoneDecrypt(query, KEY,IV).trim();
+            query = StringUtil.phoneDecrypt(query, KEY, IV).trim();
         } catch (Exception e) {
             InnerException.exInvalidParam("数据解析失败");
         }
-        UserOrderListDTO result=new UserOrderListDTO();
+        UserOrderListDTO result = new UserOrderListDTO();
         //手机号则查询token
-        if(StringUtil.isPhone(query)){
+        if (StringUtil.isPhone(query)) {
             result.setTokenList(BeanUtil.mapList(tokenService.getTokenByPhone(query), TokenDTO.class));
-        }else if(StringUtil.isEmail(query)){
+        } else if (StringUtil.isEmail(query)) {
             // result.setEmailList(Arrays.asList(emailService.getEmail(query)));
         }
 
-        if(result.getTokenList()==null){
-            InnerException.ex("该号码或邮箱未订购任何服务",400);
+        if (result.getTokenList() == null) {
+            InnerException.ex("该号码或邮箱未订购任何服务", 400);
         }
         return result;
     }
 
 
 
-    public void getEmailCaptcha(String email) {
-        String captcha= StringUtil.getCaptcha();
-        if(redisTemplate.hasKey(email)){
-            InnerException.exInvalidParam("验证码已发送,请稍后重试");
-        }
-        try {
-            messageService.sendMimeMessage(email,"验证码","您的验证码为:<h2>"+captcha+"</h2>");
-        } catch (Exception e) {
-            log.error("getEmailCaptcha fail" + e.getMessage());
-            InnerException.exInvalidParam("验证码发送失败");
-        }
-        redisTemplate.opsForValue().set(email,captcha,300,TimeUnit.SECONDS);
-    }
-
     public void refreshToken(Integer orderId) {
         //订购token服务
         String token = StringUtil.getRandomString(10);
         while (tokenService.getToken(token) != null) {
+            tokenService.tokenCache.invalidate(token);
             token = StringUtil.getRandomString(10);
         }
         Token order = new Token();

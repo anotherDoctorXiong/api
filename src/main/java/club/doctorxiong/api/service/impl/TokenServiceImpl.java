@@ -1,15 +1,21 @@
 package club.doctorxiong.api.service.impl;
 
 
+import club.doctorxiong.api.common.dto.TokenDTO;
 import club.doctorxiong.api.entity.Token;
 import club.doctorxiong.api.mapper.TokenMapper;
 import club.doctorxiong.api.service.ITokenService;
+import club.doctorxiong.api.uitls.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -21,6 +27,16 @@ import java.util.List;
  */
 @Service
 public class TokenServiceImpl extends ServiceImpl<TokenMapper, Token> implements ITokenService {
+
+    public LoadingCache<String, TokenDTO> tokenCache = Caffeine.newBuilder().expireAfterWrite(1,TimeUnit.HOURS).build(key -> getTokenDTO(key));
+
+    private TokenDTO getTokenDTO(String key){
+        TokenDTO tokenDTO = BeanUtil.map(getToken(key),TokenDTO.class);
+        if(tokenDTO == null){
+            tokenDTO = new TokenDTO(key);
+        }
+        return tokenDTO;
+    }
 
     @Override
     public Token getToken(String token) {
