@@ -57,7 +57,7 @@ public class OrderService {
     public Cache<String, String> priceLock = Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
 
     // 每个订单请求保留五分钟等回调
-    public Cache<BigDecimal, TokenOrderRequest> orderRequestCache = Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
+    public Cache<String, TokenOrderRequest> orderRequestCache = Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
 
 
     /**
@@ -95,7 +95,7 @@ public class OrderService {
 
         //订单设置为未支付状态
         order.setPaySuccess(false);
-        orderRequestCache.put(price,order);
+        orderRequestCache.put(price.toString(),order);
         return result;
     }
 
@@ -115,7 +115,7 @@ public class OrderService {
     /**
      * @description: 查询订单是否支付成功, 前端采用轮询的查询方式
      */
-    public boolean getPayStatus(BigDecimal price) {
+    public boolean getPayStatus(String price) {
         TokenOrderRequest order = orderRequestCache.getIfPresent(price);
         boolean result = order != null ? order.isPaySuccess() : false;
         if (result) {
@@ -124,12 +124,13 @@ public class OrderService {
         return result;
     }
 
+
+
     /**
      * @description: 取消支付
      */
-    public void payCancel(BigDecimal price) {
+    public void payCancel(String price) {
         //删除订单锁
-        TokenOrderRequest order = orderRequestCache.getIfPresent(price);
         orderRequestCache.invalidate(price);
     }
 

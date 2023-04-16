@@ -42,12 +42,12 @@ public class OrderController {
      * 查询是否支付成功,让前端轮询调用
      */
     @RequestMapping(value = "/pay/status",method = RequestMethod.GET)
-    public CommonResponse<Boolean> getPayStatus(@RequestParam("payId") BigDecimal price) {
+    public CommonResponse<Boolean> getPayStatus(@RequestParam("payId") String price) {
         return CommonResponse.OK(orderService.getPayStatus(price));
     }
 
     @RequestMapping(value = "/pay/cancel",method = RequestMethod.GET)
-    public CommonResponse orderCancel(@RequestParam("payId") BigDecimal price) {
+    public CommonResponse orderCancel(@RequestParam("payId") String price) {
         orderService.payCancel(price);
         return CommonResponse.OK();
     }
