@@ -123,11 +123,11 @@ public class StockService  {
         // 考虑开始时间和结束时间为null的情况
         int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(kLineData, startDate.toString());
         int end = endDate == null ? (kLineData.length - 1) : StringUtil.getIndexOrRight(kLineData, endDate.toString());
-        if (start > end) {
-            InnerException.exInvalidParam("该股票无数据返回");
+        if (start >= end && (end - start) < kLineData.length) {
+            return Arrays.copyOfRange(kLineData, start, end + 1);
+        }else {
+            return new String[][]{};
         }
-        //返回对应时间段内的数据
-        return Arrays.copyOfRange(kLineData, start, end + 1);
     }
 
 

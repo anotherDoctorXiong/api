@@ -52,31 +52,37 @@ public class FundService {
         if (!HUO_BI_TYPE.equals(fundDTODetail.getType())) {
             fundDTODetail.setExpectData(getFundExpect(fundCode));
         }
-
+        if(fundDTODetail.getNetWorthData() == null && fundDTODetail.getMillionCopiesIncomeData() == null){
+            return fundDTODetail;
+        }
         fundDTODetail = SerializationUtils.clone(fundDTODetail);
-        if(needHistory){
-            if (startDate != null || endDate != null) {
-                if (HUO_BI_TYPE.equals(fundDTODetail.getType())) {
-                    int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getMillionCopiesIncomeData(), startDate.toString());
-                    int end = endDate == null ? (fundDTODetail.getMillionCopiesIncomeData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getMillionCopiesIncomeData(), endDate.toString());
-                    if (end >= start) {
-                        fundDTODetail.setMillionCopiesIncomeData(Arrays.copyOfRange(fundDTODetail.getMillionCopiesIncomeData(), start, end + 1));
-                        fundDTODetail.setSevenDaysYearIncomeData(Arrays.copyOfRange(fundDTODetail.getSevenDaysYearIncomeData(), start, end + 1));
-                    }
+        if(needHistory && (startDate != null || endDate != null)){
+            if (HUO_BI_TYPE.equals(fundDTODetail.getType())) {
+                int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getMillionCopiesIncomeData(), startDate.toString());
+                int end = endDate == null ? (fundDTODetail.getMillionCopiesIncomeData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getMillionCopiesIncomeData(), endDate.toString());
+                if (end >= start && (end - start) < fundDTODetail.getMillionCopiesIncomeData().length) {
+                    fundDTODetail.setMillionCopiesIncomeData(Arrays.copyOfRange(fundDTODetail.getMillionCopiesIncomeData(), start, end + 1));
+                    fundDTODetail.setSevenDaysYearIncomeData(Arrays.copyOfRange(fundDTODetail.getSevenDaysYearIncomeData(), start, end + 1));
                 } else {
-                    int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getNetWorthData(), startDate.toString());
-                    int end = endDate == null ? (fundDTODetail.getNetWorthData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getNetWorthData(), endDate.toString());
-                    if (end >= start) {
-                        fundDTODetail.setNetWorthData(Arrays.copyOfRange(fundDTODetail.getNetWorthData(), start, end + 1));
-                        fundDTODetail.setTotalNetWorthData(Arrays.copyOfRange(fundDTODetail.getTotalNetWorthData(), start, end + 1));
-                    }
+                    fundDTODetail.setMillionCopiesIncomeData(new String[][]{});
+                    fundDTODetail.setSevenDaysYearIncomeData(new String[][]{});
+                }
+            } else {
+                int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(fundDTODetail.getNetWorthData(), startDate.toString());
+                int end = endDate == null ? (fundDTODetail.getNetWorthData().length - 1) : StringUtil.getIndexOrRight(fundDTODetail.getNetWorthData(), endDate.toString());
+                if (end >= start && (end - start) < fundDTODetail.getNetWorthData().length) {
+                    fundDTODetail.setNetWorthData(Arrays.copyOfRange(fundDTODetail.getNetWorthData(), start, end + 1));
+                    fundDTODetail.setTotalNetWorthData(Arrays.copyOfRange(fundDTODetail.getTotalNetWorthData(), start, end + 1));
+                }else {
+                    fundDTODetail.setNetWorthData(new String[][]{});
+                    fundDTODetail.setTotalNetWorthData(new String[][]{});
                 }
             }
         }else {
-            fundDTODetail.setMillionCopiesIncomeData(null);
-            fundDTODetail.setSevenDaysYearIncomeData(null);
-            fundDTODetail.setNetWorthData(null);
-            fundDTODetail.setTotalNetWorthData(null);
+            fundDTODetail.setMillionCopiesIncomeData(new String[][]{});
+            fundDTODetail.setSevenDaysYearIncomeData(new String[][]{});
+            fundDTODetail.setNetWorthData(new String[][]{});
+            fundDTODetail.setTotalNetWorthData(new String[][]{});
         }
         return fundDTODetail;
     }

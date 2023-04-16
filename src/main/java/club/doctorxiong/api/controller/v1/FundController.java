@@ -2,6 +2,7 @@ package club.doctorxiong.api.controller.v1;
 
 
 import club.doctorxiong.api.common.CommonResponse;
+import club.doctorxiong.api.common.InnerException;
 import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.dto.FundPositionDTO;
 import club.doctorxiong.api.service.FundService;
@@ -35,14 +36,17 @@ public class FundController {
     private FundService fundService;
 
 
-
-
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
     public CommonResponse<FundDTO> fundDetail(
             @RequestParam("code") String code,
             @RequestParam(required = false, value = "startDate") LocalDate startDate,
             @RequestParam(required = false, value = "endDate")  LocalDate endDate
     ) {
+        if(startDate != null && endDate != null){
+            if(startDate.compareTo(endDate) > 0){
+                InnerException.exInvalidParam("无效的时间区间");
+            }
+        }
         return CommonResponse.OK(fundService.getFund(code, startDate, endDate, true));
     }
 
@@ -52,6 +56,11 @@ public class FundController {
             @RequestParam(required = false, value = "startDate")  LocalDate startDate,
             @RequestParam(required = false, value = "endDate")  LocalDate endDate
     ) {
+        if(startDate != null && endDate != null){
+            if(startDate.compareTo(endDate) > 0){
+                InnerException.exInvalidParam("无效的时间区间");
+            }
+        }
         return CommonResponse.OK(fundService.getFundList(codeStr, startDate, endDate));
     }
 

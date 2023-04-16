@@ -2,6 +2,7 @@ package club.doctorxiong.api.controller.v1;
 
 
 import club.doctorxiong.api.common.CommonResponse;
+import club.doctorxiong.api.common.InnerException;
 import club.doctorxiong.api.common.RedisKeyConstants;
 import club.doctorxiong.api.common.dto.ConvertBondDTO;
 import club.doctorxiong.api.common.dto.FundDTO;
@@ -71,7 +72,11 @@ public class StockController {
                                    @RequestParam(required = false, value = "endDate")  LocalDate endDate,
                                    @RequestParam(required = false, value = "type", defaultValue = "0") Integer type) {
 
-
+        if(startDate != null && endDate != null){
+            if(startDate.compareTo(endDate) > 0){
+                InnerException.exInvalidParam("无效的时间区间");
+            }
+        }
         return CommonResponse.OK(stockService.getDayData(code, startDate, endDate, type));
     }
 
@@ -80,7 +85,11 @@ public class StockController {
                                        @RequestParam(required = false, value = "startDate") LocalDate startDate,
                                        @RequestParam(required = false, value = "endDate") LocalDate endDate,
                                        @RequestParam(required = false, value = "type", defaultValue = "0") Integer type) {
-
+        if(startDate != null && endDate != null){
+            if(startDate.compareTo(endDate) > 0){
+                InnerException.exInvalidParam("无效的时间区间");
+            }
+        }
         return CommonResponse.OK(stockService.getDateRangeData(code, startDate, endDate, type,true));
     }
 
@@ -89,7 +98,11 @@ public class StockController {
                                         @RequestParam(required = false, value = "startDate") LocalDate startDate,
                                         @RequestParam(required = false, value = "endDate") LocalDate endDate,
                                         @RequestParam(required = false, value = "type", defaultValue = "0") Integer type) {
-
+        if(startDate != null && endDate != null){
+            if(startDate.compareTo(endDate) > 0){
+                InnerException.exInvalidParam("无效的时间区间");
+            }
+        }
         return CommonResponse.OK(stockService.getDateRangeData(code, startDate, endDate, type,false));
     }
 
