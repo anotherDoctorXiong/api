@@ -8,6 +8,7 @@ import club.doctorxiong.api.common.RedisKeyConstants;
 import club.doctorxiong.api.entity.DailyIndexData;
 import club.doctorxiong.api.entity.Email;
 import club.doctorxiong.api.entity.VisitStatus;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -31,8 +32,11 @@ import java.util.stream.Collectors;
 public class TaskComponent {
 
     @Autowired
-    private FundService fundService;
+    private FundComponent fundComponent;
 
+
+    @Autowired
+    private StockComponent stockComponent;
 
 
 
@@ -44,8 +48,19 @@ public class TaskComponent {
      * @date: 2020/5/9 15:16
      * @description: 处理当天的网站访问情况
      */
-    @Scheduled(cron = "*/10 * * * * ?")
-    public void finishTodayVisitTimes(){
+    @Scheduled(cron = "* */10 * * * ?")
+    public void CacheStats(){
+        CacheStats fundStats = fundComponent.fundCache.stats();
+        log.info("fundStats.hitCount():"+fundStats.hitCount());//命中次数
+        log.info("fundStats.hitRate():"+fundStats.hitRate());//缓存命中率
+        log.info("fundStats.missCount():"+fundStats.missCount());//未命中次数
+        log.info("fundStats.missRate():"+fundStats.missRate());//未命中率
+
+        CacheStats stockStats = stockComponent.stockCache.stats();
+        log.info("stockStats.hitCount():"+stockStats.hitCount());//命中次数
+        log.info("stockStats.hitRate():"+stockStats.hitRate());//缓存命中率
+        log.info("stockStats.missCount():"+stockStats.missCount());//未命中次数
+        log.info("stockStats.missRate():"+stockStats.missRate());//未命中率
 
     }
 
