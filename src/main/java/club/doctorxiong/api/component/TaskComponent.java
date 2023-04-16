@@ -48,19 +48,14 @@ public class TaskComponent {
      * @date: 2020/5/9 15:16
      * @description: 处理当天的网站访问情况
      */
-    @Scheduled(cron = "* */10 * * * ?")
+    @Scheduled(cron = "0 0 */1 * * ?")
     public void CacheStats(){
         CacheStats fundStats = fundComponent.fundCache.stats();
-        log.info("fundStats.hitCount():"+fundStats.hitCount());//命中次数
-        log.info("fundStats.hitRate():"+fundStats.hitRate());//缓存命中率
-        log.info("fundStats.missCount():"+fundStats.missCount());//未命中次数
-        log.info("fundStats.missRate():"+fundStats.missRate());//未命中率
+        log.info("fundStats命中次数:{}-缓存命中率:{}-未命中次数:{}-未命中率:{}",fundStats.hitCount(),fundStats.hitRate(),fundStats.missCount(),fundStats.missCount());
+
 
         CacheStats stockStats = stockComponent.stockCache.stats();
-        log.info("stockStats.hitCount():"+stockStats.hitCount());//命中次数
-        log.info("stockStats.hitRate():"+stockStats.hitRate());//缓存命中率
-        log.info("stockStats.missCount():"+stockStats.missCount());//未命中次数
-        log.info("stockStats.missRate():"+stockStats.missRate());//未命中率
+        log.info("stockStats命中次数:{}-缓存命中率:{}-未命中次数:{}-未命中率:{}",stockStats.hitCount(),stockStats.hitRate(),stockStats.missCount(),stockStats.missCount());
 
     }
 
