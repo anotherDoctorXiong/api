@@ -100,7 +100,7 @@ public class OrderService {
     }
 
     public void setPayResult(PhonePayCallBackRequest result) {
-        TokenOrderRequest currentOrder = orderRequestCache.getIfPresent(result.getMoney());
+        TokenOrderRequest currentOrder = orderRequestCache.getIfPresent(result.getMoney().toString());
         if (currentOrder == null) {
             log.error("发现无法处理的订单（及时退款或人工处理）_" + result);
             return;
