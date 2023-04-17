@@ -55,10 +55,10 @@ public class TokenDTO {
      */
     public boolean tokenRefreshTimes(){
         this.times ++;
-        if(this.type.equals(1) && this.times > 10){
+        if(this.type.equals(1) && this.times > 100){
             return false;
         }
-        if(this.type.equals(3) && this.times > 20){
+        if(this.type.equals(3) && this.times > 10000){
             return false;
         }
         return true;
