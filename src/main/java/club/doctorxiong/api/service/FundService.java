@@ -90,7 +90,7 @@ public class FundService {
     }
 
     public List<FundDTO> getFundList(String codeStr, LocalDate startDate, LocalDate endDate){
-        return Arrays.asList(codeStr.split(",")).stream().limit(50).map(code->getFund(code,startDate,endDate,true)).filter(FundDTO::validFund).collect(Collectors.toList());
+        return Arrays.asList(codeStr.split(",")).parallelStream().limit(50).map(code->getFund(code,startDate,endDate,true)).filter(FundDTO::validFund).collect(Collectors.toList());
     }
 
 
@@ -118,7 +118,7 @@ public class FundService {
         if (arr.length > 50) {
             arr = Arrays.copyOfRange(arr, 0, 50);
         }
-        return Arrays.asList(arr).stream().map(e->getFund(e,null,null,false)).filter(FundDTO::validFund).collect(Collectors.toList());
+        return Arrays.asList(arr).parallelStream().map(e->getFund(e,null,null,false)).filter(FundDTO::validFund).collect(Collectors.toList());
     }
 
     public PageData<FundDTO> getFundRank(FundRankRequest request) {
