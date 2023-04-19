@@ -120,11 +120,11 @@ public class FundComponent {
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
             long random = System.nanoTime() % 3600 + 1800;
-            if (fundDTODetail.getNetWorthDate() == null && fundDTODetail.getMillionCopiesIncomeDate() == null) {
+            /*if (fundDTODetail.getNetWorthDate() == null && fundDTODetail.getMillionCopiesIncomeDate() == null) {
                 // 新发售基金或者无效基金缓存至今天结束
                 log.info(String.format("FundCache 空的基金数据,缓存至当日结束 code{%s}", key));
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
-            }
+            }*/
             // 不到收盘不会更新
             if (currentTime < expireComponent.getTimestampOfClosePM() && fundDTODetail.getCode() != null) {
                 log.info(String.format("FundCache 缓存至下午收盘并添加随机后缀 code{%s}", key));
@@ -147,7 +147,7 @@ public class FundComponent {
         public long expireAfterRead(String key, FundDTO value, long currentTime, long currentDuration) {
             return currentDuration; // 返回剩余时间，不更新过期时间
         }
-    }).build(key -> getFundDetail(key));
+    }).recordStats().build(key -> getFundDetail(key));
 
     /**
      * 获取基金排行的分页数据

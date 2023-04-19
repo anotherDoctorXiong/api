@@ -97,7 +97,7 @@ public class StockComponent {
         public long expireAfterRead(String key, StockDTO value, long currentTime, long currentDuration) {
             return currentDuration; // 返回剩余时间，不更新过期时间
         }
-    }).build(key -> getStockData(key));
+    }).recordStats().build(key -> getStockData(key));
 
 
     /**
