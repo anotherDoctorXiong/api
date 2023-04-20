@@ -351,7 +351,7 @@ public class StockComponent {
         return allStock;
     }
 
-    public LoadingCache<String,List<ConvertBondDTO>> convertBondCache = Caffeine.newBuilder().expireAfterWrite(1,TimeUnit.HOURS).build(key -> getConvertBondList());
+    public LoadingCache<String,List<ConvertBondDTO>> convertBondCache = Caffeine.newBuilder().expireAfterWrite(1,TimeUnit.DAYS).build(key -> getConvertBondList());
     private List<ConvertBondDTO> getConvertBondList() throws IOException{
         Integer pageIndex = 1;
         String convertBondRank = httpSupport.get(UrlUtil.getConvertBondRankUrl(pageIndex));

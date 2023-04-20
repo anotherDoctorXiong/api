@@ -11,14 +11,11 @@ import club.doctorxiong.api.common.dto.UserOrderListDTO;
 import club.doctorxiong.api.common.request.EmailOrderRequest;
 import club.doctorxiong.api.common.request.PhonePayCallBackRequest;
 import club.doctorxiong.api.common.request.TokenOrderRequest;
-import club.doctorxiong.api.service.impl.TokenServiceImpl;
 import club.doctorxiong.api.uitls.BeanUtil;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import club.doctorxiong.api.uitls.StringUtil;
 

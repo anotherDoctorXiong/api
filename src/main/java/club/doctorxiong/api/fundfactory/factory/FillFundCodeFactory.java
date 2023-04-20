@@ -1,6 +1,5 @@
 package club.doctorxiong.api.fundfactory.factory;
 
-import club.doctorxiong.api.component.CommonDataComponent;
 import club.doctorxiong.api.fundfactory.FillFundDetailFactoryService;
 import club.doctorxiong.api.fundfactory.FundDetailInterface;
 import club.doctorxiong.api.fundfactory.FundOptionalEnum;

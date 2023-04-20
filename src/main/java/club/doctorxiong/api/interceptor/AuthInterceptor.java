@@ -3,39 +3,18 @@ package club.doctorxiong.api.interceptor;
 
 import club.doctorxiong.api.common.CommonResponse;
 import club.doctorxiong.api.common.HttpParams;
-import club.doctorxiong.api.common.RedisKeyConstants;
-import club.doctorxiong.api.common.dto.FundExpectDataDTO;
 import club.doctorxiong.api.common.dto.TokenDTO;
-import club.doctorxiong.api.component.ExpireComponent;
-import club.doctorxiong.api.entity.Token;
 import club.doctorxiong.api.service.ITokenService;
-import club.doctorxiong.api.service.impl.TokenServiceImpl;
-import club.doctorxiong.api.uitls.BeanUtil;
 import com.alibaba.fastjson.JSONObject;
-
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.Expiry;
-import com.github.benmanes.caffeine.cache.LoadingCache;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -55,11 +34,11 @@ public class AuthInterceptor implements HandlerInterceptor {
         String token = HttpParams.getRequestToken(request);
         if (StringUtils.isEmpty(token)) {
             TokenDTO ipToken = tokenService.getTokenCache(CommonHttpInterceptor.getIpAddress(request));
-            if(!ipToken.tokenRefreshTimes()){
+            if (!ipToken.tokenRefreshTimes()) {
                 responseMessage(response, CommonResponse.FAIL("每小时免费100次,www.doctorxiong.club获得更多"));
                 return false;
             }
-        }else {
+        } else {
             TokenDTO tokenDTO = tokenService.getTokenCache(token);
             if (tokenDTO.getType().equals(1)) {
                 responseMessage(response, CommonResponse.FAIL("无效的token"));

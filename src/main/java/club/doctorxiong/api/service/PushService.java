@@ -1,8 +1,6 @@
 package club.doctorxiong.api.service;
 
 
-import club.doctorxiong.api.common.RedisKeyConstants;
-
 import club.doctorxiong.api.common.response.Jin10Response;
 import club.doctorxiong.api.common.response.Jin10SearchResponse;
 import club.doctorxiong.api.component.OkHttpComponent;
@@ -16,7 +14,6 @@ import com.alibaba.fastjson.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import club.doctorxiong.api.uitls.StringUtil;
 
@@ -43,8 +40,7 @@ public class PushService {
     private MessageService messageService;
     @Autowired
     private OkHttpComponent okHttpComponent;
-    @Autowired
-    private RedisTemplate redisTemplate;
+
     @Autowired
     private IDailyIndexDataService iDailyIndexDataService;
     @Autowired
@@ -151,12 +147,6 @@ public class PushService {
                 contentMD5 = StringUtil.getMd5(v.getData().getContent());
             } catch (NoSuchAlgorithmException e) {
                 log.error("pushJin10Content md5 转换失败:" + v.getData().getContent());
-            }
-            // 防止重复发送数据
-            if(redisTemplate.opsForSet().members(RedisKeyConstants.JIN_SHI_PUSH_DATA_SET).contains(contentMD5)){
-                return;
-            }else {
-                redisTemplate.opsForSet().add(RedisKeyConstants.JIN_SHI_PUSH_DATA_SET,contentMD5);
             }
             String content = "<h3>北京时间:" + DateTimeFormatter.ofPattern("yyyy日MM月dd日 HH时mm分").format(v.getTime()) + "</h3>"
                     + v.getData().getContent()+ "<br>";

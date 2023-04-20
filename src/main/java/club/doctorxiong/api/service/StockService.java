@@ -1,42 +1,28 @@
 package club.doctorxiong.api.service;
 
 import club.doctorxiong.api.common.InnerException;
-import club.doctorxiong.api.common.LocalDateTimeFormatter;
-import club.doctorxiong.api.common.RedisKeyConstants;
+import club.doctorxiong.api.common.dto.ConvertBondDTO;
 import club.doctorxiong.api.common.dto.IndustryDetailDTO;
 import club.doctorxiong.api.common.dto.KLineDTO;
 import club.doctorxiong.api.common.dto.StockDTO;
+import club.doctorxiong.api.common.page.PageRequest;
 import club.doctorxiong.api.common.request.KLineRequest;
 import club.doctorxiong.api.common.request.StockRankRequest;
-import club.doctorxiong.api.component.CommonDataComponent;
-import club.doctorxiong.api.component.ExpireComponent;
 import club.doctorxiong.api.component.StockComponent;
-import club.doctorxiong.api.entity.KLine;
-import club.doctorxiong.api.uitls.LambdaUtil;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import club.doctorxiong.api.common.page.PageData;
 
 import club.doctorxiong.api.uitls.StringUtil;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static club.doctorxiong.api.common.LocalDateTimeFormatter.printValidTime;
-import static club.doctorxiong.api.common.RedisKeyConstants.INDUSTRY_RANK;
 
 
 
@@ -50,14 +36,6 @@ import static club.doctorxiong.api.common.RedisKeyConstants.INDUSTRY_RANK;
 public class StockService  {
     @Autowired
     private StockComponent stockComponent;
-    @Autowired
-    private CommonDataComponent commonDataComponent;
-    @Autowired
-    private ExpireComponent expireComponent;
-    @Autowired
-    private RedisTemplate redisTemplate;
-    @Autowired
-    private IKLineService kLineService;
 
 
     /**
@@ -280,6 +258,21 @@ public class StockService  {
      */
     public List<String[]> getIndexAll() {
         return stockComponent.allStockAndIndexCache.get(false);
+    }
+
+    public List<ConvertBondDTO> getAllConvertBond(){
+        return stockComponent.convertBondCache.get("");
+    }
+
+    public PageData<ConvertBondDTO> getConvertBondPage(PageRequest request){
+        List<ConvertBondDTO> all = getAllConvertBond();
+        PageData<ConvertBondDTO> convertBondPage = new PageData();
+        convertBondPage.setPageIndex(request.getPageIndex());
+        convertBondPage.setPageSize(request.getPageSize());
+        convertBondPage.setTotalRecord(getAllConvertBond().size());
+        convertBondPage.setRank(all.subList(request.getStartNo(),
+                request.getPageIndex() * request.getPageSize() > convertBondPage.getTotalRecord() ? convertBondPage.getTotalRecord() : request.getPageIndex() * request.getPageSize()));
+        return convertBondPage;
     }
 
 

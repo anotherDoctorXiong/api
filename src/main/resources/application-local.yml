@@ -43,9 +43,4 @@ spring:
       # 取连接前是否测试连接是否有效,通过validation-query方式
       test-on-borrow: false
       validation-query: select version();
-  redis:
-    host: 8.135.117.119
-    port: 6379
-    timeout: 5000
-    database: 1
-    password: 592802622
+

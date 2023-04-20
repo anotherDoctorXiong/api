@@ -3,18 +3,13 @@ package club.doctorxiong.api.controller.v1;
 
 import club.doctorxiong.api.common.CommonResponse;
 import club.doctorxiong.api.common.InnerException;
-import club.doctorxiong.api.common.RedisKeyConstants;
 import club.doctorxiong.api.common.dto.ConvertBondDTO;
-import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.dto.IndustryDetailDTO;
 import club.doctorxiong.api.common.dto.StockDTO;
 import club.doctorxiong.api.common.page.PageRequest;
-import club.doctorxiong.api.component.CommonDataComponent;
 import club.doctorxiong.api.service.StockService;
 import club.doctorxiong.api.common.request.StockRankRequest;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -26,9 +21,7 @@ import club.doctorxiong.api.common.page.PageData;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import static club.doctorxiong.api.component.CommonDataComponent.convertBondList;
 
 /**
  * @auther: 熊鑫
@@ -42,8 +35,7 @@ public class StockController {
 
     @Resource
     private StockService stockService;
-    @Resource
-    private CommonDataComponent commonDataComponent;
+
 
 
 
@@ -136,18 +128,12 @@ public class StockController {
 
     @RequestMapping(value = "/convertBond", method = RequestMethod.POST)
     public CommonResponse<PageData<ConvertBondDTO>> getConvertBond(@RequestBody PageRequest request) {
-        PageData<ConvertBondDTO> convertBondPage = new PageData();
-        convertBondPage.setPageIndex(request.getPageIndex());
-        convertBondPage.setPageSize(request.getPageSize());
-        convertBondPage.setTotalRecord(convertBondList.size());
-        convertBondPage.setRank(convertBondList.subList(request.getStartNo(),
-                request.getPageIndex() * request.getPageSize() > convertBondPage.getTotalRecord() ? convertBondPage.getTotalRecord() : request.getPageIndex() * request.getPageSize()));
-        return CommonResponse.OK(convertBondPage);
+        return CommonResponse.OK(stockService.getConvertBondPage(request));
     }
 
     @RequestMapping(value = "/convertBond", method = RequestMethod.GET)
     public CommonResponse<List<ConvertBondDTO>> getConvertBond() {
-        return CommonResponse.OK(convertBondList);
+        return CommonResponse.OK(stockService.getAllConvertBond());
     }
 
 
