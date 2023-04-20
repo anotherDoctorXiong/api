@@ -4,7 +4,10 @@ import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
 
+import java.io.*;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * bean复制转换工具类
@@ -46,5 +49,37 @@ public class BeanUtil {
         if (source != null && dest != null) {
             mapper.map(source, dest);
         }
+    }
+
+
+    /**
+     * 使用Gzip算法压缩Java对象并存储到字节数组中
+     * @param t 待压缩的Java对象
+     * @return 压缩后的字节数组
+     * @throws IOException
+     */
+    public static <T extends Serializable> byte[] compressObject(T t) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(baos));
+        oos.writeObject(t);
+        oos.close();
+        byte[] compressed = baos.toByteArray();
+        baos.close();
+        return compressed;
+    }
+
+    /**
+     * 从字节数组中解压缩为Java对象
+     * @param compressed 压缩后的字节数组
+     * @return 解压缩后的Java对象
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    public static <T extends Serializable> T decompressObject(byte[] compressed) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(compressed);
+        ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(bais));
+        T obj = (T) ois.readObject();
+        ois.close();
+        return obj;
     }
 }
