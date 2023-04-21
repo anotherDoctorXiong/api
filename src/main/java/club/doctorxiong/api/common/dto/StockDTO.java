@@ -73,8 +73,6 @@ public class StockDTO extends CacheDTO implements Serializable {
 
     private List<String[]> minData;
 
-    private String[][] arrData;
-
     public StockDTO(String code) {
         this.code = code;
     }

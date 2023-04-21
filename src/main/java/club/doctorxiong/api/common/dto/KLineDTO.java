@@ -20,6 +20,16 @@ import java.io.Serializable;
 @Builder
 public class KLineDTO extends CacheDTO implements Serializable {
 
+    /**
+     * 这个是解压后填充
+     */
     private String[][] arrData;
+
+    private String[] lastData;
+
+    /**
+     * 压缩后的数据
+     */
+    private byte[] bytesData;
 
 }

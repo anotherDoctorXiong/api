@@ -83,7 +83,7 @@ public class StockService  {
         //key规则,股票代码+d(日),w(周),m(月)+0(不复权),1(前复权),2(后复权)
         stockCode = StringUtil.getTotalStockCode(stockCode);
         //K线数据为两部分组成,历史K线和当日K线,当日K线为实时K线数据一般由当日分时数据
-        KLineDTO kLineDTO = stockComponent.KLineCache.get(new KLineRequest(type,stockCode));
+        KLineDTO kLineDTO = stockComponent.getKLineDTO(new KLineRequest(type,stockCode));
         String[][] kLineData = kLineDTO.getArrData();
         if(kLineData == null || kLineData.length == 0){
             return new String[0][];

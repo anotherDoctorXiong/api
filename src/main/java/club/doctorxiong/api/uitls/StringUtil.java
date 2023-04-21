@@ -7,8 +7,7 @@ import org.apache.tomcat.util.codec.binary.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -19,6 +18,8 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import static club.doctorxiong.api.common.LocalDateTimeFormatter.getLocalDateByTimestamp;
 
@@ -129,14 +130,23 @@ public class StringUtil {
      * @description: 数组嵌套数组的json转换为二维数组
      */
     public static String[][] jsonToTwoArr1(JSONArray jsonArr) {
-        return jsonArr.stream().map(obj -> {
+       /* return jsonArr.stream().map(obj -> {
             JSONArray jsonArray = (JSONArray) obj;
             String str = getLocalDateByTimestamp(jsonArray.getLong(0)).toString();
             return new String[]{
                     str,
                     jsonArray.getString(1)
             };
-        }).collect(Collectors.toList()).toArray(new String[jsonArr.size()][2]);
+        }).collect(Collectors.toList()).toArray(new String[jsonArr.size()][2]);*/
+
+        String[][] result = new String[jsonArr.size()][2];
+        for (int i = 0; i < jsonArr.size(); i++) {
+            JSONArray jsonArray = jsonArr.getJSONArray(i);
+            String str = getLocalDateByTimestamp(jsonArray.getLong(0)).toString();
+            result[i][0] = str;
+            result[i][1] = jsonArray.getString(1);
+        }
+        return result;
     }
 
     /**
@@ -215,25 +225,6 @@ public class StringUtil {
         Matcher m = p.matcher(email);
         return m.matches();
 
-    }
-
-    /**
-     * @name: ObjectToBytes
-     * @auther: 熊鑫
-     * @param obj
-     * @return: byte[]
-     * @date: 2020/9/2 16:55
-     * @description: 将数据转换为字节数组
-     */
-    public static byte[] ArrToBytes(String[][] obj){
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayOutputStream);
-            outputStream.writeObject(obj);
-            return byteArrayOutputStream.toByteArray();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     /**
@@ -422,7 +413,6 @@ public class StringUtil {
         }
         return false;
     }
-
 
 
     /**

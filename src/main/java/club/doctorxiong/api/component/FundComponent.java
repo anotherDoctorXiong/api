@@ -1,12 +1,14 @@
 package club.doctorxiong.api.component;
 
 
+import club.doctorxiong.api.common.dto.FundCacheDTO;
 import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.dto.FundExpectDataDTO;
 import club.doctorxiong.api.common.dto.FundPositionDTO;
 import club.doctorxiong.api.common.page.PageData;
 import club.doctorxiong.api.common.request.FundRankRequest;
 import club.doctorxiong.api.fundfactory.FillFundDetailFactoryService;
+import club.doctorxiong.api.uitls.BeanUtil;
 import club.doctorxiong.api.uitls.StringUtil;
 import club.doctorxiong.api.uitls.UrlUtil;
 import com.alibaba.fastjson.JSONArray;
@@ -59,12 +61,12 @@ public class FundComponent {
         public long expireAfterCreate(String key, FundExpectDataDTO fundExpectDataDTO, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
             if (fundExpectDataDTO.getRequestFail() == 1) {
-                log.error(String.format("FundExpectCache 请求失败,五分钟后过期 code{%s}", key));
+                log.error("FundExpectCache 请求失败,五分钟后过期 code-{}", key);
                 return TimeUnit.MINUTES.toNanos(5);
             }
 
             if (fundExpectDataDTO.getResolveFail() == 1) {
-                log.error(String.format("FundExpectCache 解析失败,缓存当日 code{%s}", key));
+                log.error("FundExpectCache 解析失败,缓存当日 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
 
@@ -73,18 +75,18 @@ public class FundComponent {
             }
             // 未开盘缓存至开盘
             if (currentTime < expireComponent.getTimestampOfOpenAM()) {
-                log.info(String.format("FundExpectCache 缓存到上午收盘 code{%s}", key));
+                log.info("FundExpectCache 缓存到上午收盘 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfOpenAM() - currentTime);
             }
             if (currentTime < expireComponent.getTimestampOfClosePM()) {
-                log.info(String.format("FundExpectCache 缓存一分钟 code{%s}", key));
+                log.info("FundExpectCache 缓存一分钟 code-{}", key);
                 return TimeUnit.MINUTES.toNanos(1);
             }
             if (currentTime - expireComponent.getTimestampOfClosePM() > 60 && fundExpectDataDTO.getExpectWorthDate() != null) {
-                log.info(String.format("FundExpectCache 缓存至当日结束 code{%s}", key));
+                log.info("FundExpectCache 缓存至当日结束 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
-            log.info(String.format("FundExpectCache 未命中任何策略 缓存五分钟 code{%s}", key));
+            log.info("FundExpectCache 未命中任何策略 缓存五分钟 code-{}", key);
             return TimeUnit.MINUTES.toNanos(5); // 设置缓存过期时间为5分钟
         }
 
@@ -102,18 +104,18 @@ public class FundComponent {
     /**
      * 基金详情缓存
      */
-    public LoadingCache<String, FundDTO> fundCache = Caffeine.newBuilder().softValues().expireAfter(new Expiry<String, FundDTO>() {
+    public LoadingCache<String, FundCacheDTO> fundCache = Caffeine.newBuilder().expireAfter(new Expiry<String, FundCacheDTO>() {
         @Override
-        public long expireAfterCreate(String key, FundDTO fundDTODetail, long currentTime) {
+        public long expireAfterCreate(String key, FundCacheDTO fundDTODetail, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
 
             if (fundDTODetail.getRequestFail() == 1) {
-                log.error(String.format("FundCache 请求失败,五分钟后过期 code{%s}", key));
+                log.error("FundCache 请求失败,五分钟后过期 code-{}", key);
                 return TimeUnit.MINUTES.toNanos(5);
             }
 
             if (fundDTODetail.getResolveFail() == 1) {
-                log.error(String.format("FundCache 解析失败,缓存当日 code{%s}", key));
+                log.error("FundCache 解析失败,缓存当日 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
             if (LocalDate.now().getDayOfWeek().getValue() > 5) {
@@ -122,32 +124,42 @@ public class FundComponent {
             long random = System.nanoTime() % 3600 + 1800;
             /*if (fundDTODetail.getNetWorthDate() == null && fundDTODetail.getMillionCopiesIncomeDate() == null) {
                 // 新发售基金或者无效基金缓存至今天结束
-                log.info(String.format("FundCache 空的基金数据,缓存至当日结束 code{%s}", key));
+                log.info("FundCache 空的基金数据,缓存至当日结束 code{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }*/
             // 不到收盘不会更新
             if (currentTime < expireComponent.getTimestampOfClosePM() && fundDTODetail.getCode() != null) {
-                log.info(String.format("FundCache 缓存至下午收盘并添加随机后缀 code{%s}", key));
+                log.info("FundCache 缓存至下午收盘并添加随机后缀 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime + random);
             }
             if (fundDTODetail.getNetWorthDate() != null && fundDTODetail.getNetWorthDate().isEqual(LocalDate.now())) {
-                log.info(String.format("FundCache 缓存十五小时 code{%s}", key));
+                log.info("FundCache 缓存十五小时 code-{}", key);
                 return TimeUnit.HOURS.toNanos(15);
             }
-            log.info(String.format("FundCache 未命中任何策略,随机缓存 code{%s}", key));
+            log.info("FundCache 未命中任何策略,随机缓存 code-{}", key);
             return TimeUnit.SECONDS.toNanos(random); // 设置缓存过期再随机加个后缀
         }
 
         @Override
-        public long expireAfterUpdate(String key, FundDTO value, long currentTime, long currentDuration) {
+        public long expireAfterUpdate(String key, FundCacheDTO value, long currentTime, long currentDuration) {
             return currentDuration; // 返回当前剩余时间，表示不更新过期时间
         }
 
         @Override
-        public long expireAfterRead(String key, FundDTO value, long currentTime, long currentDuration) {
+        public long expireAfterRead(String key, FundCacheDTO value, long currentTime, long currentDuration) {
             return currentDuration; // 返回剩余时间，不更新过期时间
         }
-    }).recordStats().build(key -> getFundDetail(key));
+    }).softValues().recordStats().build(key -> getFundDetail(key));
+
+    public FundDTO getFundDTO(String fundCode){
+        FundCacheDTO cacheDTO = fundCache.get(fundCode);
+        try {
+            return BeanUtil.decompressObject(cacheDTO.getFundBytesData());
+        } catch (Exception e) {
+            log.error("getFundDTO gzip io异常{}", e);
+        }
+        return new FundDTO();
+    }
 
     /**
      * 获取基金排行的分页数据
@@ -156,7 +168,7 @@ public class FundComponent {
         @Override
         public long expireAfterCreate(FundRankRequest key, PageData<FundDTO> pageData, long currentTime) {
             if (pageData.getRequestFail() == 1) {
-                log.error(String.format("FundRankCache 缓存失败,五分钟后过期 code{%s}", key));
+                log.error("FundRankCache 缓存失败,五分钟后过期 code-{}", key);
                 return TimeUnit.MINUTES.toNanos(5);
             }
             return TimeUnit.HOURS.toNanos(3);
@@ -180,11 +192,11 @@ public class FundComponent {
         @Override
         public long expireAfterCreate(String key, FundPositionDTO fundPositionDTO, long currentTime) {
             if (fundPositionDTO.getRequestFail() == 1) {
-                log.error(String.format("FundPositionCache 请求失败,一小时后过期 code{%s}", key));
+                log.error("FundPositionCache 请求失败,一小时后过期 code-{}", key);
                 return TimeUnit.HOURS.toNanos(1);
             }
             if (fundPositionDTO.getRequestFail() == 1) {
-                log.error(String.format("FundPositionCache 解析失败,当天过期 code{%s}", key));
+                log.error("FundPositionCache 解析失败,当天过期 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
 
@@ -216,14 +228,12 @@ public class FundComponent {
      * @date: 2020/6/9 22:51
      * @Description: 通过基金代码获取最新的基金信息
      */
-    private FundDTO getFundDetail(String fundCode) {
-        FundDTO fundDTODetail = new FundDTO();
+    private FundCacheDTO getFundDetail(String fundCode) {
+        FundCacheDTO cacheDTO = new FundCacheDTO();
         String detailUrl = UrlUtil.getFundDetailUrl(fundCode);
+        FundDTO fundDTODetail = new FundDTO();
         try {
             String detailStr = httpSupport.get(detailUrl);
-            if (detailStr.contains("<html>")) {
-                return fundDTODetail;
-            }
             String[] arr = detailStr.replace(" ", "").split(";");
             for (int i = 0; i < arr.length; i++) {
                 //经split分割的字符串数组为空时长度仍然为1
@@ -233,14 +243,17 @@ public class FundComponent {
                 //从字符串获取相关数据
                 fillFundDetail.fillFundDetail(arr[i], fundDTODetail);
             }
+            cacheDTO.setNetWorthDate(fundDTODetail.getNetWorthDate());
+            cacheDTO.setCode(fundCode);
+            cacheDTO.setFundBytesData(BeanUtil.compressObject(fundDTODetail));
         } catch (IOException e) {
-            log.error(String.format("FundCache http connect fail! connect url{%s},error message{%s}", detailUrl, e.getMessage()));
-            fundDTODetail.setRequestFail(1);
+            log.error("FundCache http connect fail! connect url-{},error message{}", detailUrl, e);
+            cacheDTO.setRequestFail(1);
         } catch (Exception e) {
-            fundDTODetail.setResolveFail(1);
-            log.error(String.format("FundCache http connect fail! connect url{%s},error message{%s}", detailUrl, e.getMessage()));
+            cacheDTO.setResolveFail(1);
+            log.error("FundCache http connect fail! connect url-{},error message{}", detailUrl, e);
         }
-        return fundDTODetail;
+        return cacheDTO;
     }
 
 
@@ -259,11 +272,11 @@ public class FundComponent {
                 fundExpectDataDTO.setExpectWorthDate(getLocalDateTimeByTimestamp(export.getLong("gztime")));
             }
         } catch (IOException e) {
-            log.error(String.format("FundExpectCache http connect fail! connect url{%s},error message{%s}", expectUrl, e.getMessage()));
+            log.error("FundExpectCache http connect fail! connect url-{},error message{}", expectUrl, e);
             fundExpectDataDTO.setRequestFail(1);
         } catch (Exception e) {
             fundExpectDataDTO.setResolveFail(1);
-            log.error(String.format("FundExpectCache data resolve fail! connect url{%s},error message{%s}", expectUrl, e.getMessage()));
+            log.error("FundExpectCache data resolve fail! connect url-{},error message{}", expectUrl, e);
         }
         return fundExpectDataDTO;
     }
@@ -300,7 +313,7 @@ public class FundComponent {
                     }
                 }
             } else {
-                log.error(String.format("FundPositionDTO get 基金持仓股票 fail !, url{%s}", UrlUtil.getHTMLUrl(code)));
+                log.error("FundPositionDTO get 基金持仓股票 fail !, url-{}", UrlUtil.getHTMLUrl(code));
                 return fundPositionDTO;
             }
             fundPositionDTO.setStockList(list);
@@ -318,11 +331,11 @@ public class FundComponent {
                 }
             }
         } catch (IOException e) {
-            log.error(String.format("fundRankCache http connect fail! connect url{%s},error message{%s}", UrlUtil.getHTMLUrl(code) + UrlUtil.getHTMLUrl(code), e.getMessage()));
+            log.error("fundRankCache http connect fail! connect url-{},error message{}", UrlUtil.getHTMLUrl(code) + UrlUtil.getHTMLUrl(code), e);
             fundPositionDTO.setRequestFail(1);
         } catch (Exception e) {
             fundPositionDTO.setResolveFail(1);
-            log.error(String.format("fundRankCache resolve fail! connect url{%s},error message{%s}", UrlUtil.getHTMLUrl(code) + UrlUtil.getHTMLUrl(code), e.getMessage()));
+            log.error("fundRankCache resolve fail! connect url-{},error message{}", UrlUtil.getHTMLUrl(code) + UrlUtil.getHTMLUrl(code), e);
         }
         return fundPositionDTO;
     }
@@ -354,10 +367,10 @@ public class FundComponent {
             stockRank.setTotalRecord(jsonObject.getInteger("allNum"));
             stockRank.setRank(rank);
         } catch (IOException e) {
-            log.error(String.format("fundRankCache http connect fail! connect url{%s},error message{%s}", fundRankUrl, e.getMessage()));
+            log.error("fundRankCache http connect fail! connect url-{},error message{}", fundRankUrl, e);
             stockRank.setRequestFail(1);
         } catch (Exception e) {
-            log.error(String.format("fundRankCache http connect fail! connect url{%s},error message{%s}", fundRankUrl, e.getMessage()));
+            log.error("fundRankCache http connect fail! connect url-{},error message{}", fundRankUrl, e);
         }
         return stockRank;
     }

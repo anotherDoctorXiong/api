@@ -69,6 +69,22 @@ public class BeanUtil {
     }
 
     /**
+     * 使用Gzip算法压缩Java对象并存储到字节数组中
+     * @param t 待压缩的Java对象
+     * @return 压缩后的字节数组
+     * @throws IOException
+     */
+    public static <T extends Serializable> byte[] objectToBytes(T t) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(t);
+        oos.close();
+        byte[] compressed = baos.toByteArray();
+        baos.close();
+        return compressed;
+    }
+
+    /**
      * 从字节数组中解压缩为Java对象
      * @param compressed 压缩后的字节数组
      * @return 解压缩后的Java对象

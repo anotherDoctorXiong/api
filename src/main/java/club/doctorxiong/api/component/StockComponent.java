@@ -9,6 +9,7 @@ import club.doctorxiong.api.common.dto.StockDTO;
 import club.doctorxiong.api.common.page.PageData;
 import club.doctorxiong.api.common.request.KLineRequest;
 import club.doctorxiong.api.common.request.StockRankRequest;
+import club.doctorxiong.api.uitls.BeanUtil;
 import club.doctorxiong.api.uitls.LambdaUtil;
 import club.doctorxiong.api.uitls.UrlUtil;
 import com.alibaba.fastjson.JSON;
@@ -20,11 +21,13 @@ import com.github.benmanes.caffeine.cache.Expiry;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.stereotype.Component;
 import club.doctorxiong.api.uitls.StringUtil;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,12 +63,12 @@ public class StockComponent {
         public long expireAfterCreate(String key, StockDTO stockDTO, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
             if (stockDTO.getRequestFail() == 1) {
-                log.error(String.format("stockCache 请求失败,五分钟后过期 code{%s}", key));
+                log.error("stockCache 请求失败,五分钟后过期 code-{}", key);
                 return TimeUnit.MINUTES.toNanos(5);
             }
 
             if (stockDTO.getResolveFail() == 1) {
-                log.error(String.format("stockCache 解析失败,当天过期 code{%s}", key));
+                log.error("stockCache 解析失败,当天过期 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
 
@@ -73,18 +76,18 @@ public class StockComponent {
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
             if (currentTime < expireComponent.getTimestampOfOpenAM()) {
-                log.info(String.format("stockCache 缓存到上午开盘 code{%s}", key));
+                log.info("stockCache 缓存到上午开盘 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfOpenAM() - currentTime);
             }
             if (currentTime < expireComponent.getTimestampOfClosePM()) {
-                log.info(String.format("stockCache 缓存一分钟 code{%s}", key));
+                log.info("stockCache 缓存一分钟 code-{}", key);
                 return TimeUnit.MINUTES.toNanos(1);
             }
             if (currentTime - expireComponent.getTimestampOfClosePM() > 60 && stockDTO.getDate().toLocalDate().equals(LocalDate.now())) {
-                log.info(String.format("stockCache 缓存至当日结束 code{%s}", key));
+                log.info("stockCache 缓存至当日结束 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
-            log.info(String.format("stockCache 未命中任何策略 缓存五分钟 code{%s}", key));
+            log.info("stockCache 未命中任何策略 缓存五分钟 code-{}", key);
             return TimeUnit.MINUTES.toNanos(5); // 设置缓存过期时间为5分钟
         }
 
@@ -97,40 +100,51 @@ public class StockComponent {
         public long expireAfterRead(String key, StockDTO value, long currentTime, long currentDuration) {
             return currentDuration; // 返回剩余时间，不更新过期时间
         }
-    }).recordStats().build(key -> getStockData(key));
+    }).build(key -> getStockData(key));
+
+
+    public KLineDTO getKLineDTO(KLineRequest request){
+        // 这里深拷贝一下
+        KLineDTO kLineDTO = SerializationUtils.clone(KLineCache.get(request));
+        try {
+            kLineDTO.setArrData(BeanUtil.decompressObject(kLineDTO.getBytesData()));
+        } catch (Exception e) {
+            log.error("gzip io异常{}", e);
+        }
+        return kLineDTO;
+    }
 
 
     /**
-     * 股票日k缓存
+     * 股票日k缓存 这里用字节数组压缩下
      */
-    public LoadingCache<KLineRequest, KLineDTO> KLineCache = Caffeine.newBuilder().softValues().expireAfter(new Expiry<KLineRequest, KLineDTO>() {
+    public LoadingCache<KLineRequest, KLineDTO> KLineCache = Caffeine.newBuilder().expireAfter(new Expiry<KLineRequest, KLineDTO>() {
 
         @Override
         public long expireAfterCreate(KLineRequest key, KLineDTO value, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
             if (value.getRequestFail() == 1) {
-                log.error(String.format("KLineDTO 请求失败,五分钟后过期 code{%s}", key));
+                log.error("KLineDTO 请求失败,五分钟后过期 code-{}", key);
                 return TimeUnit.MINUTES.toNanos(5);
             }
             if (value.getResolveFail() == 1) {
-                log.error(String.format("KLineDTO 解析失败,当天过期 code{%s}", key));
+                log.error("KLineDTO 解析失败,当天过期 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
             if (LocalDate.now().getDayOfWeek().getValue() > 5) {
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
             if (currentTime < expireComponent.getTimestampOfOpenPM()) {
-                log.info(String.format("KLineDTO 缓存到下午收盘 code{%s}", key));
+                log.info("KLineDTO 缓存到下午收盘 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfOpenPM() - currentTime);
             }
-            if(currentTime - expireComponent.getTimestampOfClosePM() > 60 && value.getArrData() != null && value.getArrData().length > 0){
-                String[] lastData = value.getArrData()[value.getArrData().length - 1];
-                if(LocalDate.parse(lastData[0]).compareTo(LocalDate.now()) == 0){
-                    log.info(String.format("KLineDTO 缓存至当日结束 code{%s}", key));
+            if(currentTime - expireComponent.getTimestampOfClosePM() > 60 && value.getLastData() != null){
+                if(LocalDate.parse(value.getLastData()[0]).compareTo(LocalDate.now()) == 0){
+                    log.info("KLineDTO 缓存至当日结束 code-{}", key);
                     return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
                 }
             }
-            log.info(String.format("KLineDTO 未命中任何策略 缓存二十分钟 code{%s}", key));
+            log.info("KLineDTO 未命中任何策略 缓存二十分钟 code-{}", key);
             return TimeUnit.MINUTES.toNanos(20); // 设置缓存过期时间为5分钟
         }
 
@@ -143,8 +157,7 @@ public class StockComponent {
         public long expireAfterRead(KLineRequest key, KLineDTO value, long currentTime, long currentDuration) {
             return currentDuration;
         }
-    }).build((key)-> getKLineData(key));
-
+    }).recordStats().softValues().build((key)-> getKLineData(key));
 
     private StockDTO getStockData(String stockCode) {
         StockDTO stockDTO = new StockDTO();
@@ -171,10 +184,10 @@ public class StockComponent {
             stockDTO.setMinData(minList);
         } catch (IOException e) {
             stockDTO.setRequestFail(1);
-            log.error(String.format("StockDTO http connect fail! connect url{%s},error message{%s}", stockUrl, e.getMessage()));
+            log.error("StockDTO http connect fail! connect url-{},error {}", stockUrl, e);
         } catch (Exception e) {
             stockDTO.setResolveFail(1);
-            log.error(String.format("StockDTO data resolve fail! connect url{%s},error message{%s}", stockUrl, e.getMessage()));
+            log.error("StockDTO data resolve fail! connect url-{},error {}", stockUrl, e);
         }
         return stockDTO;
     }
@@ -215,13 +228,17 @@ public class StockComponent {
             }
             //K线数据
             String klineData = data.containsKey(key) ? data.getString(key) : data.getString("day");
-            kLineDTO.setArrData(JSON.parseObject(klineData, String[][].class));
+            String[][] arr = JSON.parseObject(klineData, String[][].class);
+            if(arr.length > 0){
+                kLineDTO.setLastData(arr[arr.length-1]);
+            }
+            kLineDTO.setBytesData(BeanUtil.compressObject(arr));
         } catch (IOException e) {
             kLineDTO.setRequestFail(1);
-            log.error(String.format("KLineData http connect fail! connect url{%s},error message{%s}", stockUrl, e.getMessage()));
+            log.error("KLineData http connect fail! connect url-{},error message{}", stockUrl, e);
         } catch (Exception e) {
             kLineDTO.setResolveFail(1);
-            log.error(String.format("KLineData data resolve fail! connect url{%s},error message{%s}", stockUrl, e.getMessage()));
+            log.error("KLineData data resolve fail! connect url-{},error message{}", stockUrl, e);
         }
         return kLineDTO;
     }
@@ -252,9 +269,9 @@ public class StockComponent {
                 return new IndustryDetailDTO(jsonArray6.getString(2), jsonArray6.getString(0));
             }).collect(Collectors.toList());
         } catch (IOException e) {
-            log.error(String.format("IndustryDetailDTO http connect fail! connect url{%s},error message{%s}", UrlUtil.getSWUrl(), e.getMessage()));
+            log.error("IndustryDetailDTO http connect fail! connect url-{},error message{}", UrlUtil.getSWUrl(), e);
         }catch (Exception e) {
-            log.error(String.format("IndustryDetailDTO data resolve fail! connect url{%s},error message{%s}", UrlUtil.getSWUrl(), e.getMessage()));
+            log.error("IndustryDetailDTO data resolve fail! connect url-{},error message{}", UrlUtil.getSWUrl(), e);
         }
         return res;
     }
@@ -317,9 +334,9 @@ public class StockComponent {
             ).filter(Objects::nonNull).collect(Collectors.toList()));
         } catch (IOException e) {
             stockRank.setRequestFail(1);
-            log.error(String.format("StockRank http connect fail! connect url{%s},error message{%s}", requestUrl, e.getMessage()));
+            log.error("StockRank http connect fail! connect url-{},error message{}", requestUrl, e);
         } catch (Exception e) {
-            log.error(String.format("StockRank data resolve fail! connect url{%s},error message{%s}", requestUrl, e.getMessage()));
+            log.error("StockRank data resolve fail! connect url-{},error message{}", requestUrl, e);
         }
         return stockRank;
     }

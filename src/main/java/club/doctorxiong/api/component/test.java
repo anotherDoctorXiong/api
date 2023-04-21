@@ -2,6 +2,8 @@ package club.doctorxiong.api.component;
 
 import club.doctorxiong.api.common.dto.CompressFundDTO;
 import club.doctorxiong.api.common.dto.FundDTO;
+import club.doctorxiong.api.common.dto.KLineDTO;
+import club.doctorxiong.api.common.request.KLineRequest;
 import club.doctorxiong.api.service.impl.TokenServiceImpl;
 import club.doctorxiong.api.uitls.BeanUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -21,21 +23,20 @@ public class test implements CommandLineRunner {
     private FundComponent fundComponent;
 
     @Autowired
+    private StockComponent stockComponent;
+
+    @Autowired
     private TokenServiceImpl tokenService;
 
 
     @Override
     public void run(String... args) throws Exception {
-       /* List<FundDTO> list = new ArrayList<>();
+        /*List<FundDTO> list = new ArrayList<>();
         List<String[]> all = fundComponent.allFundCache.get("");
         all.parallelStream().forEach(fund -> {
             log.info(fund[0] + "-" + fund[2]);
-            fundComponent.fundCache.get(fund[0]);
+            System.out.println(fundComponent.getFundDTO(fund[0]).getName());
         });*/
-        /*FundDTO fundDTO = fundComponent.fundCache.get("000961");
-        CompressFundDTO compressFundDTO = new CompressFundDTO();
-        compressFundDTO.setData(BeanUtil.compressObject(fundDTO));
-        Thread.sleep(10000000);*/
-        // byte[] compressFundDTO = BeanUtil.compressObject(fundComponent.fundCache.get("000963"));
+
     }
 }

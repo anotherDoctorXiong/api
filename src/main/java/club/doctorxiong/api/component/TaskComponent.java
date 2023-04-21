@@ -37,8 +37,8 @@ public class TaskComponent {
         log.info("fundStats命中次数:{}-缓存命中率:{}-未命中次数:{}-未命中率:{}",fundStats.hitCount(),fundStats.hitRate(),fundStats.missCount(),fundStats.missRate());
 
 
-        CacheStats stockStats = stockComponent.stockCache.stats();
-        log.info("stockStats命中次数:{}-缓存命中率:{}-未命中次数:{}-未命中率:{}",stockStats.hitCount(),stockStats.hitRate(),stockStats.missCount(),stockStats.missRate());
+        CacheStats klineStats = stockComponent.stockCache.stats();
+        log.info("klineStats命中次数:{}-缓存命中率:{}-未命中次数:{}-未命中率:{}",klineStats.hitCount(),klineStats.hitRate(),klineStats.missCount(),klineStats.missRate());
 
     }
 

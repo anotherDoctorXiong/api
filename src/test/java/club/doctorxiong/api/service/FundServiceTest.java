@@ -63,6 +63,7 @@ public class FundServiceTest {
     }
     @Test
     public void testGetFundListStr() {
+        fundService.getFund("016018",null,null,true);
         // System.out.println(JSONObject.toJSONString(fundService.getFundListStr()));
     }
     @Test

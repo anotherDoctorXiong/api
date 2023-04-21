@@ -45,7 +45,7 @@ public class FundService {
      * @date: 2019/6/23 15:54
      */
     public FundDTO getFund(String fundCode, LocalDate startDate, LocalDate endDate,Boolean needHistory) {
-        FundDTO fundDTODetail = fundComponent.fundCache.get(fundCode);
+        FundDTO fundDTODetail = fundComponent.getFundDTO(fundCode);
         if(!fundDTODetail.validFund()){
             return fundDTODetail;
         }
