@@ -109,7 +109,7 @@ public class StockComponent {
         try {
             kLineDTO.setArrData(BeanUtil.decompressObject(kLineDTO.getBytesData()));
         } catch (Exception e) {
-            log.error("gzip io异常{}", e);
+            log.error("getKLineDTO gzip io异常{}", e);
         }
         return kLineDTO;
     }

@@ -55,7 +55,6 @@ public class FundService {
         if(fundDTODetail.getNetWorthData() == null && fundDTODetail.getMillionCopiesIncomeData() == null){
             return fundDTODetail;
         }
-        fundDTODetail = SerializationUtils.clone(fundDTODetail);
         if(needHistory){
             if(startDate != null || endDate != null){
                 if (HUO_BI_TYPE.equals(fundDTODetail.getType())) {
