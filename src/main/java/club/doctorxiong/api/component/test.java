@@ -34,8 +34,10 @@ public class test implements CommandLineRunner {
         /*List<FundDTO> list = new ArrayList<>();
         List<String[]> all = fundComponent.allFundCache.get("");
         all.parallelStream().forEach(fund -> {
-            log.info(fund[0] + "-" + fund[2]);
-            System.out.println(fundComponent.getFundDTO(fund[0]).getName());
+            log.info("info1" + fund[0] + "-" + fund[2]);
+            FundDTO fundDTO = fundComponent.getFundDTO(fund[0]);
+
+            System.out.println("info2" +fundDTO.getCode() + fundDTO.getName());
         });*/
 
     }
