@@ -107,7 +107,9 @@ public class StockComponent {
         // 这里深拷贝一下
         KLineDTO kLineDTO = SerializationUtils.clone(KLineCache.get(request));
         try {
-            kLineDTO.setArrData(BeanUtil.decompressObject(kLineDTO.getBytesData()));
+            if(kLineDTO.getBytesData() != null){
+                kLineDTO.setArrData(BeanUtil.decompressObject(kLineDTO.getBytesData()));
+            }
         } catch (Exception e) {
             log.error("getKLineDTO gzip io异常{}", e);
         }

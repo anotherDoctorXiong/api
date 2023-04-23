@@ -154,7 +154,9 @@ public class FundComponent {
     public FundDTO getFundDTO(String fundCode){
         FundCacheDTO cacheDTO = fundCache.get(fundCode);
         try {
-            return BeanUtil.decompressObject(cacheDTO.getFundBytesData());
+            if(cacheDTO.getFundBytesData() != null){
+                return BeanUtil.decompressObject(cacheDTO.getFundBytesData());
+            }
         } catch (Exception e) {
             log.error("getFundDTO gzip io异常{}", e);
         }
