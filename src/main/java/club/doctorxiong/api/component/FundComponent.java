@@ -250,8 +250,8 @@ public class FundComponent {
                 //从字符串获取相关数据
                 fillFundDetail.fillFundDetail(arr[i], fundDTODetail);
             }
-            if(fundCode.equals("008290") || fundCode.equals("009076")){
-                log.info(detailStr);
+            if(StringUtil.isBlank(fundDTODetail.getName())){
+                log.info("FundCache empty" + detailStr);
             }
             cacheDTO.setNetWorthDate(fundDTODetail.getNetWorthDate());
             cacheDTO.setCode(fundCode);
