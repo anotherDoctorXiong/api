@@ -251,7 +251,7 @@ public class FundComponent {
                 fillFundDetail.fillFundDetail(arr[i], fundDTODetail);
             }
             if(fundCode.equals("008290") || fundCode.equals("009076")){
-                log.info(fundDTODetail.toString());
+                log.info(detailStr);
             }
             cacheDTO.setNetWorthDate(fundDTODetail.getNetWorthDate());
             cacheDTO.setCode(fundCode);
