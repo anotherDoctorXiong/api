@@ -30,7 +30,6 @@ public class FundComponentTest {
     @Test
     public void testGetFundExpectData() {
         System.out.println(fundComponent.fundExpectCache.get("003634"));
-        System.out.println(fundComponent.fundCache.get("003634"));
 
         FundRankRequest rankRequest = new FundRankRequest();
         fundComponent.fundRankCache.get(rankRequest);

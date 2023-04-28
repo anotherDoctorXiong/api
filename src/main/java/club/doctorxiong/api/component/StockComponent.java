@@ -19,6 +19,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.SerializationUtils;
@@ -116,11 +117,16 @@ public class StockComponent {
         return kLineDTO;
     }
 
+    public CacheStats getKLineStat(){
+        // 这里深拷贝一下
+        return KLineCache.stats();
+    }
+
 
     /**
      * 股票日k缓存 这里用字节数组压缩下
      */
-    public LoadingCache<KLineRequest, KLineDTO> KLineCache = Caffeine.newBuilder().expireAfter(new Expiry<KLineRequest, KLineDTO>() {
+    private LoadingCache<KLineRequest, KLineDTO> KLineCache = Caffeine.newBuilder().expireAfter(new Expiry<KLineRequest, KLineDTO>() {
 
         @Override
         public long expireAfterCreate(KLineRequest key, KLineDTO value, long currentTime) {

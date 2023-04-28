@@ -33,11 +33,11 @@ public class TaskComponent {
      */
     @Scheduled(cron = "0 0 */1 * * ?")
     public void CacheStats(){
-        CacheStats fundStats = fundComponent.fundCache.stats();
+        CacheStats fundStats = fundComponent.getFundStat();
         log.info("fundStats命中次数:{}-缓存命中率:{}-未命中次数:{}-未命中率:{}",fundStats.hitCount(),fundStats.hitRate(),fundStats.missCount(),fundStats.missRate());
 
 
-        CacheStats klineStats = stockComponent.stockCache.stats();
+        CacheStats klineStats = stockComponent.getKLineStat();
         log.info("klineStats命中次数:{}-缓存命中率:{}-未命中次数:{}-未命中率:{}",klineStats.hitCount(),klineStats.hitRate(),klineStats.missCount(),klineStats.missRate());
 
     }

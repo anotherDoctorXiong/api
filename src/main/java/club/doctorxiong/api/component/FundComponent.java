@@ -16,6 +16,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import org.jsoup.Jsoup;
@@ -104,7 +105,7 @@ public class FundComponent {
     /**
      * 基金详情缓存
      */
-    public LoadingCache<String, FundCacheDTO> fundCache = Caffeine.newBuilder().expireAfter(new Expiry<String, FundCacheDTO>() {
+    private LoadingCache<String, FundCacheDTO> fundCache = Caffeine.newBuilder().expireAfter(new Expiry<String, FundCacheDTO>() {
         @Override
         public long expireAfterCreate(String key, FundCacheDTO fundDTODetail, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
@@ -161,6 +162,10 @@ public class FundComponent {
             log.error("getFundDTO gzip io异常{}", e);
         }
         return new FundDTO();
+    }
+
+    public CacheStats getFundStat(){
+        return fundCache.stats();
     }
 
     /**
@@ -244,6 +249,9 @@ public class FundComponent {
                 }
                 //从字符串获取相关数据
                 fillFundDetail.fillFundDetail(arr[i], fundDTODetail);
+            }
+            if(fundCode.equals("008290") || fundCode.equals("009076")){
+                log.info(fundDTODetail.toString());
             }
             cacheDTO.setNetWorthDate(fundDTODetail.getNetWorthDate());
             cacheDTO.setCode(fundCode);
