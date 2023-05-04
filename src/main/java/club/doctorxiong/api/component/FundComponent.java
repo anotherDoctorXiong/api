@@ -241,6 +241,11 @@ public class FundComponent {
         FundDTO fundDTODetail = new FundDTO();
         try {
             String detailStr = httpSupport.get(detailUrl);
+            if(StringUtil.isBlank(detailUrl)){
+                log.error("FundCache http return empty! connect url-{}", detailUrl);
+                cacheDTO.setRequestFail(1);
+                return cacheDTO;
+            }
             String[] arr = detailStr.replace(" ", "").split(";");
             for (int i = 0; i < arr.length; i++) {
                 //经split分割的字符串数组为空时长度仍然为1
@@ -250,18 +255,15 @@ public class FundComponent {
                 //从字符串获取相关数据
                 fillFundDetail.fillFundDetail(arr[i], fundDTODetail);
             }
-            if(StringUtil.isBlank(fundDTODetail.getName())){
-                log.info("FundCache empty" + detailStr);
-            }
             cacheDTO.setNetWorthDate(fundDTODetail.getNetWorthDate());
             cacheDTO.setCode(fundCode);
             cacheDTO.setFundBytesData(BeanUtil.compressObject(fundDTODetail));
         } catch (IOException e) {
-            log.error("FundCache http connect fail! connect url-{},error message{}", detailUrl, e);
+            log.error("FundCache http connect fail! connect url-{},error message-{}", detailUrl, e);
             cacheDTO.setRequestFail(1);
         } catch (Exception e) {
             cacheDTO.setResolveFail(1);
-            log.error("FundCache http connect fail! connect url-{},error message{}", detailUrl, e);
+            log.error("FundCache http resolve fail! connect url-{},error message-{}", detailUrl, e);
         }
         return cacheDTO;
     }
@@ -282,11 +284,11 @@ public class FundComponent {
                 fundExpectDataDTO.setExpectWorthDate(getLocalDateTimeByTimestamp(export.getLong("gztime")));
             }
         } catch (IOException e) {
-            log.error("FundExpectCache http connect fail! connect url-{},error message{}", expectUrl, e);
+            log.error("FundExpectCache http connect fail! connect url-{},error message-{}", expectUrl, e);
             fundExpectDataDTO.setRequestFail(1);
         } catch (Exception e) {
             fundExpectDataDTO.setResolveFail(1);
-            log.error("FundExpectCache data resolve fail! connect url-{},error message{}", expectUrl, e);
+            log.error("FundExpectCache data resolve fail! connect url-{},error message-{}", expectUrl, e);
         }
         return fundExpectDataDTO;
     }
@@ -341,11 +343,11 @@ public class FundComponent {
                 }
             }
         } catch (IOException e) {
-            log.error("fundRankCache http connect fail! connect url-{},error message{}", UrlUtil.getHTMLUrl(code) + UrlUtil.getHTMLUrl(code), e);
+            log.error("fundRankCache http connect fail! connect url-{},error message-{}", UrlUtil.getHTMLUrl(code) + UrlUtil.getHTMLUrl(code), e);
             fundPositionDTO.setRequestFail(1);
         } catch (Exception e) {
             fundPositionDTO.setResolveFail(1);
-            log.error("fundRankCache resolve fail! connect url-{},error message{}", UrlUtil.getHTMLUrl(code) + UrlUtil.getHTMLUrl(code), e);
+            log.error("fundRankCache resolve fail! connect url-{},error message-{}", UrlUtil.getHTMLUrl(code) + UrlUtil.getHTMLUrl(code), e);
         }
         return fundPositionDTO;
     }
@@ -377,10 +379,10 @@ public class FundComponent {
             stockRank.setTotalRecord(jsonObject.getInteger("allNum"));
             stockRank.setRank(rank);
         } catch (IOException e) {
-            log.error("fundRankCache http connect fail! connect url-{},error message{}", fundRankUrl, e);
+            log.error("fundRankCache http connect fail! connect url-{},error message-{}", fundRankUrl, e);
             stockRank.setRequestFail(1);
         } catch (Exception e) {
-            log.error("fundRankCache http connect fail! connect url-{},error message{}", fundRankUrl, e);
+            log.error("fundRankCache http connect fail! connect url-{},error message-{}", fundRankUrl, e);
         }
         return stockRank;
     }
