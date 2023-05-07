@@ -22,6 +22,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 
@@ -124,7 +125,7 @@ public class StockService  {
         if(kLineData.length == 0){
             return kLineData;
         }
-        Map<Integer, String[]> map = new HashMap<>();
+        Map<Integer, String[]> map = new ConcurrentHashMap<>();
         Calendar calendar = Calendar.getInstance();
         Arrays.asList(kLineData).stream().forEach(arr -> {
             setWeekOrMonthData(calendar, arr, map, week);
@@ -185,11 +186,11 @@ public class StockService  {
                     arr[1] = oneDayData[1];
                 }
                 //最高价
-                if (arr[3].compareTo(oneDayData[3]) < 0) {
+                if (new BigDecimal(arr[3]).compareTo(new BigDecimal(oneDayData[3])) < 0) {
                     arr[3] = oneDayData[3];
                 }
                 //最低价
-                if (arr[4].compareTo(oneDayData[4]) > 0) {
+                if (new BigDecimal(arr[4]).compareTo(new BigDecimal(oneDayData[4])) > 0) {
                     arr[4] = oneDayData[4];
                 }
                 arr[5] = new BigDecimal(oneDayData[5]).add(new BigDecimal(arr[5])).toString();
@@ -199,6 +200,7 @@ public class StockService  {
             return;
         }
     }
+
 
     /**
      * @param stockCode
