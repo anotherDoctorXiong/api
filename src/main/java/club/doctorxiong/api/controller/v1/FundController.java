@@ -70,7 +70,7 @@ public class FundController {
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public CommonResponse<List<FundDTO>> fund(@RequestParam(value = "code") String codeStr) {
-        log.info("test " + LocalDateTime.now().toEpochSecond(ZoneOffset.ofHours(8)));
+        log.info("test " + System.currentTimeMillis() / 1000 +"-----"+LocalDateTime.now().toEpochSecond(ZoneOffset.ofHours(8)));
         return CommonResponse.OK(fundService.getFundList(codeStr));
     }
 
