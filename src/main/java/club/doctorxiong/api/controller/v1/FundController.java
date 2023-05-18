@@ -7,6 +7,7 @@ import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.dto.FundPositionDTO;
 import club.doctorxiong.api.service.FundService;
 import club.doctorxiong.api.common.request.FundRankRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -16,6 +17,8 @@ import club.doctorxiong.api.common.page.PageData;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 
@@ -29,6 +32,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/fund")
+@Slf4j
 public class FundController {
 
 
@@ -66,6 +70,7 @@ public class FundController {
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public CommonResponse<List<FundDTO>> fund(@RequestParam(value = "code") String codeStr) {
+        log.info("test " + LocalDateTime.now().toEpochSecond(ZoneOffset.ofHours(8)));
         return CommonResponse.OK(fundService.getFundList(codeStr));
     }
 

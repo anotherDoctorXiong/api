@@ -90,4 +90,11 @@ public class ExpireComponent {
         }
         return timestamp;
     }
+
+    public static void main(String[] args) {
+        ExpireComponent expireComponent = new ExpireComponent();
+        System.out.println(LocalDateTime.now().toLocalDate().atTime(LocalTime.MAX).toEpochSecond(ZoneOffset.ofHours(8)));
+        System.out.println(System.currentTimeMillis()/1000);
+        System.out.println(expireComponent.getTimestampOfClosePM());
+    }
 }
