@@ -61,6 +61,9 @@ public class ExpireComponent {
 
     private static long getSecondsUntilMidnight() {
         LocalDateTime now = LocalDateTime.now();
+        if(now.getHour() == 0){
+            return 60 * 60;
+        }
         LocalDateTime midnight = now.toLocalDate().atTime(LocalTime.MAX);
         Duration duration = Duration.between(now, midnight);
         return duration.getSeconds();
