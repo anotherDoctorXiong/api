@@ -76,7 +76,7 @@ public class FundComponent {
             }
             // 未开盘缓存至开盘
             if (currentTime < expireComponent.getTimestampOfOpenAM()) {
-                log.info("FundExpectCache 缓存到上午收盘 code-{}", key);
+                log.info("FundExpectCache 缓存到上午开盘 code-{}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfOpenAM() - currentTime);
             }
             if (currentTime < expireComponent.getTimestampOfClosePM()) {

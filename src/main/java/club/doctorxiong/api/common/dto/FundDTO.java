@@ -201,7 +201,8 @@ public class FundDTO extends CacheDTO implements Serializable {
     }
 
     public boolean validFund(){
-        return StringUtil.isNotBlank(this.code) && StringUtil.isNotBlank(this.name) && StringUtil.isNotBlank(this.type);
+        log.info("fund " + this.code + "type " + this.type);
+        return StringUtil.isNotBlank(this.code) && StringUtil.isNotBlank(this.name);
     }
 
 }
