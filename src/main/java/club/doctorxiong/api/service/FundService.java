@@ -1,6 +1,7 @@
 package club.doctorxiong.api.service;
 
 
+import club.doctorxiong.api.common.dto.StockDTO;
 import club.doctorxiong.api.common.page.PageData;
 import club.doctorxiong.api.component.FundComponent;
 import club.doctorxiong.api.common.dto.FundDTO;
@@ -9,6 +10,8 @@ import club.doctorxiong.api.common.dto.FundPositionDTO;
 import club.doctorxiong.api.common.request.FundRankRequest;
 
 import club.doctorxiong.api.uitls.BeanUtil;
+import club.doctorxiong.api.uitls.LambdaUtil;
+import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.BeanUtils;
@@ -45,6 +48,7 @@ public class FundService {
      * @date: 2019/6/23 15:54
      */
     public FundDTO getFund(String fundCode, LocalDate startDate, LocalDate endDate,Boolean needHistory) {
+        StringUtil.checkFundCode(fundCode);
         FundDTO fundDTODetail = fundComponent.getFundDTO(fundCode);
         if(!fundDTODetail.validFund()){
             return fundDTODetail;
@@ -89,7 +93,9 @@ public class FundService {
     }
 
     public List<FundDTO> getFundList(String codeStr, LocalDate startDate, LocalDate endDate){
-        return Arrays.asList(codeStr.split(",")).parallelStream().limit(50).map(code->getFund(code,startDate,endDate,true)).filter(FundDTO::validFund).collect(Collectors.toList());
+        return Arrays.asList(codeStr.split(",")).parallelStream().limit(50).map(
+                LambdaUtil.mapWrapper(code->getFund(code,startDate,endDate,true)
+                )).filter(FundDTO::validFund).collect(Collectors.toList());
     }
 
 
@@ -100,6 +106,7 @@ public class FundService {
      * @return: FundExpectData
      */
     public FundExpectDataDTO getFundExpect(String fundCode) {
+        StringUtil.checkFundCode(fundCode);
         return fundComponent.fundExpectCache.get(fundCode);
     }
 
@@ -117,7 +124,7 @@ public class FundService {
         if (arr.length > 50) {
             arr = Arrays.copyOfRange(arr, 0, 50);
         }
-        return Arrays.asList(arr).parallelStream().map(e->getFund(e,null,null,false)).filter(FundDTO::validFund).collect(Collectors.toList());
+        return Arrays.asList(arr).parallelStream().map(LambdaUtil.mapWrapper(e->getFund(e,null,null,false))).filter(FundDTO::validFund).collect(Collectors.toList());
     }
 
     public PageData<FundDTO> getFundRank(FundRankRequest request) {
@@ -135,6 +142,7 @@ public class FundService {
      * @description: 获取基金的仓位
      */
     public FundPositionDTO getFundPosition(String code) {
+        StringUtil.checkFundCode(code);
         return fundComponent.fundPositionCache.get(code);
     }
 

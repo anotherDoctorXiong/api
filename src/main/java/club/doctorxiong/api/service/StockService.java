@@ -9,6 +9,7 @@ import club.doctorxiong.api.common.page.PageRequest;
 import club.doctorxiong.api.common.request.KLineRequest;
 import club.doctorxiong.api.common.request.StockRankRequest;
 import club.doctorxiong.api.component.StockComponent;
+import club.doctorxiong.api.uitls.LambdaUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,12 +78,11 @@ public class StockService  {
      * @description:
      */
     public String[][] getDayData(String stockCode, LocalDate startDate, LocalDate endDate, int type) {
-
         if (type < 0 || type > 2) {
             InnerException.exInvalidParam("type(0-不复权,1-前复权,2-后复权)");
         }
         //key规则,股票代码+d(日),w(周),m(月)+0(不复权),1(前复权),2(后复权)
-        stockCode = StringUtil.getTotalStockCode(stockCode);
+        stockCode = StringUtil.getAndCheckStockCode(stockCode);
         //K线数据为两部分组成,历史K线和当日K线,当日K线为实时K线数据一般由当日分时数据
         KLineDTO kLineDTO = stockComponent.getKLineDTO(new KLineRequest(type,stockCode));
         String[][] kLineData = kLineDTO.getArrData();
@@ -120,7 +120,7 @@ public class StockService  {
      */
     public String[][] getDateRangeData(String stockCode, LocalDate startDate, LocalDate endDate, int type, boolean week) {
         //不同K线的编码格式,股票代码+d(日),w(周),m(月)+0(不复权),1(前复权),2(后复权)
-        stockCode = StringUtil.getTotalStockCode(stockCode);
+        stockCode = StringUtil.getAndCheckStockCode(stockCode);
         String[][] kLineData = getDayData(stockCode, null, null, type);
         if(kLineData.length == 0){
             return kLineData;
@@ -211,7 +211,7 @@ public class StockService  {
      * @description: 最新分时及股票数据, 此方法无需异常管理, 线程池会将异常结果全部丢弃
      */
     public StockDTO getStock(String stockCode) {
-        stockCode = StringUtil.getTotalStockCode(stockCode);
+        stockCode = StringUtil.getAndCheckStockCode(stockCode);
         return stockComponent.stockCache.get(stockCode);
     }
 
@@ -221,11 +221,11 @@ public class StockService  {
         if (arr.length > 100) {
             arr = Arrays.copyOfRange(arr, 0, 100);
         }
-        return Arrays.asList(arr).parallelStream().map(e -> {
+        return Arrays.asList(arr).parallelStream().map(LambdaUtil.mapWrapper(e -> {
             StockDTO one = SerializationUtils.clone(getStock(e));
             one.setMinData(null);
             return one;
-        }).filter(StockDTO::validStock).collect(Collectors.toList());
+        })).filter(StockDTO::validStock).collect(Collectors.toList());
     }
 
 

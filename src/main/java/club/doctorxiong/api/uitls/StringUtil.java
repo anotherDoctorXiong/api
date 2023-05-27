@@ -1,6 +1,7 @@
 package club.doctorxiong.api.uitls;
 
 
+import club.doctorxiong.api.common.InnerException;
 import com.alibaba.fastjson.JSONArray;
 import org.apache.tomcat.util.codec.binary.Base64;
 
@@ -158,16 +159,31 @@ public class StringUtil {
      * @description: 将原始股票代码转换为带交易所前缀的股票代码
      * 主要作用是判断是上交所还是深交所然后前缀加上"sh","sz"
      */
-    public static String getTotalStockCode(String originalStockCode){
-        if(originalStockCode.startsWith("sh")||originalStockCode.startsWith("sz")){
-            return originalStockCode;
+    public static String getAndCheckStockCode(String originalStockCode){
+        if(originalStockCode == null){
+            InnerException.ex("无效股票代码");
         }
-        if(originalStockCode.startsWith("6")||originalStockCode.startsWith("9")||originalStockCode.startsWith("730")||
-                originalStockCode.startsWith("000300")||originalStockCode.startsWith("5")||originalStockCode.startsWith("110")){
-            return "sh"+originalStockCode;
+        if(originalStockCode.length() == 6){
+            if(originalStockCode.startsWith("6")||originalStockCode.startsWith("9")||originalStockCode.startsWith("730")||
+                    originalStockCode.startsWith("000300")||originalStockCode.startsWith("5")||originalStockCode.startsWith("110")){
+                return "sh"+originalStockCode;
+            }
+        }else if(originalStockCode.length() == 8){
+            for (int i = 0; i < originalStockCode.length(); i++) {
+                if(i < 2 && Character.isDigit(originalStockCode.charAt(i))){
+                    InnerException.ex("无效股票代码");
+                }
+                if(i >= 2 && Character.isLetter(originalStockCode.charAt(i))){
+                    InnerException.ex("无效股票代码");
+                }
+            }
+            return originalStockCode;
+        }else {
+            InnerException.ex("无效股票代码");
         }
         return "sz"+originalStockCode;
     }
+
 
     /**
      * @name: getRandomString
@@ -413,6 +429,22 @@ public class StringUtil {
         }
         return false;
     }
+
+
+    // 检查基金代码
+    public static void checkFundCode(String fundCode){
+        if(fundCode == null || fundCode.length() != 6){
+            InnerException.ex("无效基金代码");
+        }
+        for (int i = 0; i < fundCode.length(); i++) {
+            if(!isNum(fundCode.charAt(i))){
+                InnerException.ex("无效基金代码");
+            }
+        }
+    }
+
+
+
 
 
     /**
