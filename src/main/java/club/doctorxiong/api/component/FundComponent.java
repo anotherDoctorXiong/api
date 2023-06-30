@@ -1,6 +1,7 @@
 package club.doctorxiong.api.component;
 
 
+import club.doctorxiong.api.common.InnerException;
 import club.doctorxiong.api.common.dto.FundCacheDTO;
 import club.doctorxiong.api.common.dto.FundDTO;
 import club.doctorxiong.api.common.dto.FundExpectDataDTO;
@@ -62,12 +63,12 @@ public class FundComponent {
         public long expireAfterCreate(String key, FundExpectDataDTO fundExpectDataDTO, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
             if (fundExpectDataDTO.getRequestFail() == 1) {
-                log.error("FundExpectCache 请求失败,五分钟后过期 code-{}", key);
-                return TimeUnit.MINUTES.toNanos(5);
+                log.error("FundExpectCache 请求失败,一分钟后过期 code {}", key);
+                return TimeUnit.MINUTES.toNanos(1);
             }
 
             if (fundExpectDataDTO.getResolveFail() == 1) {
-                log.error("FundExpectCache 解析失败,缓存当日 code-{}", key);
+                log.error("FundExpectCache 解析失败,缓存当日 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
 
@@ -76,18 +77,18 @@ public class FundComponent {
             }
             // 未开盘缓存至开盘
             if (currentTime < expireComponent.getTimestampOfOpenAM()) {
-                log.info("FundExpectCache 缓存到上午开盘 code-{}", key);
+                log.info("FundExpectCache 缓存到上午开盘 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfOpenAM() - currentTime);
             }
             if (currentTime < expireComponent.getTimestampOfClosePM()) {
-                log.info("FundExpectCache 缓存一分钟 code-{}", key);
+                log.info("FundExpectCache 缓存一分钟 code {}", key);
                 return TimeUnit.MINUTES.toNanos(1);
             }
             if (currentTime - expireComponent.getTimestampOfClosePM() > 60 && fundExpectDataDTO.getExpectWorthDate() != null) {
-                log.info("FundExpectCache 缓存至当日结束 code-{}", key);
+                log.info("FundExpectCache 缓存至当日结束 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
-            log.info("FundExpectCache 未命中任何策略 缓存五分钟 code-{}", key);
+            log.info("FundExpectCache 未命中任何策略 缓存五分钟 code {}", key);
             return TimeUnit.MINUTES.toNanos(5); // 设置缓存过期时间为5分钟
         }
 
@@ -111,18 +112,18 @@ public class FundComponent {
             currentTime = System.currentTimeMillis() / 1000;
 
             if (fundDTODetail.getRequestFail() == 1) {
-                log.error("FundCache 请求失败,五分钟后过期 code-{}", key);
-                return TimeUnit.MINUTES.toNanos(5);
+                log.error("FundCache 请求失败,一分钟后过期 code {}", key);
+                return TimeUnit.MINUTES.toNanos(1);
             }
 
             if (fundDTODetail.getResolveFail() == 1) {
-                log.error("FundCache 解析失败,缓存当日 code-{}", key);
+                log.error("FundCache 解析失败,缓存当日 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
             if (LocalDate.now().getDayOfWeek().getValue() > 5) {
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
-            long random = System.nanoTime() % 3600 + 1800;
+            long random = System.nanoTime() % 1800 + 1800;
             /*if (fundDTODetail.getNetWorthDate() == null && fundDTODetail.getMillionCopiesIncomeDate() == null) {
                 // 新发售基金或者无效基金缓存至今天结束
                 log.info("FundCache 空的基金数据,缓存至当日结束 code{}", key);
@@ -130,14 +131,14 @@ public class FundComponent {
             }*/
             // 不到收盘不会更新
             if (currentTime < expireComponent.getTimestampOfClosePM() && fundDTODetail.getCode() != null) {
-                log.info("FundCache 缓存至下午收盘并添加随机后缀 code-{}", key);
+                log.info("FundCache 缓存至下午收盘并添加随机后缀 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime + random);
             }
             if (fundDTODetail.getNetWorthDate() != null && fundDTODetail.getNetWorthDate().isEqual(LocalDate.now())) {
-                log.info("FundCache 缓存十五小时 code-{}", key);
+                log.info("FundCache 缓存十五小时 code {}", key);
                 return TimeUnit.HOURS.toNanos(15);
             }
-            log.info("FundCache 未命中任何策略,随机缓存 code-{}", key);
+            log.info("FundCache 未命中任何策略,随机缓存 code {},缓存{}秒", key,random);
             return TimeUnit.SECONDS.toNanos(random); // 设置缓存过期再随机加个后缀
         }
 
@@ -151,6 +152,13 @@ public class FundComponent {
             return currentDuration; // 返回剩余时间，不更新过期时间
         }
     }).softValues().recordStats().build(key -> getFundDetail(key));
+
+    public static void main(String[] args) {
+        LocalTime time = LocalTime.of(23,20);
+
+        System.out.println(System.nanoTime() % 3600 + 300 * (20-time.getHour()));
+        System.out.println(System.nanoTime() % 1800 + 1800);
+    }
 
     public FundDTO getFundDTO(String fundCode){
         FundCacheDTO cacheDTO = fundCache.get(fundCode);
@@ -171,12 +179,12 @@ public class FundComponent {
     /**
      * 获取基金排行的分页数据
      */
-    public LoadingCache<FundRankRequest, PageData<FundDTO>> fundRankCache = Caffeine.newBuilder().softValues().expireAfter(new Expiry<FundRankRequest, PageData<FundDTO>>() {
+    private LoadingCache<FundRankRequest, PageData<FundDTO>> fundRankCache = Caffeine.newBuilder().softValues().expireAfter(new Expiry<FundRankRequest, PageData<FundDTO>>() {
         @Override
         public long expireAfterCreate(FundRankRequest key, PageData<FundDTO> pageData, long currentTime) {
             if (pageData.getRequestFail() == 1) {
-                log.error("FundRankCache 缓存失败,五分钟后过期 code-{}", key);
-                return TimeUnit.MINUTES.toNanos(5);
+                log.error("FundRankCache 缓存失败,一分钟后过期 code {}", key);
+                return TimeUnit.MINUTES.toNanos(1);
             }
             return TimeUnit.HOURS.toNanos(3);
         }
@@ -190,7 +198,16 @@ public class FundComponent {
         public long expireAfterRead(FundRankRequest key, PageData<FundDTO> value, long currentTime, long currentDuration) {
             return currentDuration;
         }
-    }).build(key -> getFundRank(key));
+    }).build(key -> fundRank(key));
+
+
+    public PageData<FundDTO> getFundRank(FundRankRequest request){
+        PageData<FundDTO> rank = this.fundRankCache.get(request);
+        if(rank.getRequestFail() == 1){
+            InnerException.exInvalidParam("数据量过大,解析失败,请稍后尝试");
+        }
+        return rank;
+    }
 
     /**
      * 获取基金持仓数据
@@ -199,11 +216,11 @@ public class FundComponent {
         @Override
         public long expireAfterCreate(String key, FundPositionDTO fundPositionDTO, long currentTime) {
             if (fundPositionDTO.getRequestFail() == 1) {
-                log.error("FundPositionCache 请求失败,一小时后过期 code-{}", key);
-                return TimeUnit.HOURS.toNanos(1);
+                log.error("FundPositionCache 缓存失败,一分钟后过期 code {}", key);
+                return TimeUnit.MINUTES.toNanos(1);
             }
             if (fundPositionDTO.getRequestFail() == 1) {
-                log.error("FundPositionCache 解析失败,当天过期 code-{}", key);
+                log.error("FundPositionCache 解析失败,当天过期 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
 
@@ -361,7 +378,7 @@ public class FundComponent {
      * @author : 熊鑫
      * @date : 2019/6/11 14:17
      */
-    private PageData<FundDTO> getFundRank(FundRankRequest fundRankRequest) {
+    private PageData<FundDTO> fundRank(FundRankRequest fundRankRequest) {
         PageData<FundDTO> stockRank = new PageData();
         Headers headers = new Headers.Builder().add("Referer", "http://fund.eastmoney.com/data/fundranking.html").build();
         String fundRankUrl = UrlUtil.creatGetUrlWithParams(UrlUtil.getFundRankBaseUrl(), fundRankRequest);

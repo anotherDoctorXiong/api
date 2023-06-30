@@ -99,6 +99,9 @@ public class StockService  {
         if(kLineDate.compareTo(stockDate) == 0)  {
             kLineData[kLineData.length -1] =  new String[]{stockDate.toString(),stockDTO.getOpen(),stockDTO.getPrice(),stockDTO.getHigh(),stockDTO.getLow(),stockDTO.getVolume()};
         }
+        if(kLineDate.compareTo(stockDate) < 0){
+
+        }
         // 考虑开始时间和结束时间为null的情况
         int start = startDate == null ? 0 : StringUtil.getIndexOrLeft(kLineData, startDate.toString());
         int end = endDate == null ? (kLineData.length - 1) : StringUtil.getIndexOrRight(kLineData, endDate.toString());

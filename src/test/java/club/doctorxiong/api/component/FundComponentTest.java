@@ -27,14 +27,7 @@ public class FundComponentTest {
     public void testGetFundDetail() {
         // System.out.println(JSONObject.toJSONString(fundComponent.getFundDetail()));
     }
-    @Test
-    public void testGetFundExpectData() {
-        System.out.println(fundComponent.fundExpectCache.get("003634"));
 
-        FundRankRequest rankRequest = new FundRankRequest();
-        fundComponent.fundRankCache.get(rankRequest);
-        fundComponent.fundRankCache.get(rankRequest);
-    }
     @Test
     public void testGetFundExpectDataTest() {
         // System.out.println(JSONObject.toJSONString(fundComponent.getFundExpectDataTest()));

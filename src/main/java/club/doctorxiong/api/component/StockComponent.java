@@ -64,12 +64,12 @@ public class StockComponent {
         public long expireAfterCreate(String key, StockDTO stockDTO, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
             if (stockDTO.getRequestFail() == 1) {
-                log.error("stockCache 请求失败,五分钟后过期 code-{}", key);
+                log.error("stockCache 请求失败,五分钟后过期 code {}", key);
                 return TimeUnit.MINUTES.toNanos(5);
             }
 
             if (stockDTO.getResolveFail() == 1) {
-                log.error("stockCache 解析失败,当天过期 code-{}", key);
+                log.error("stockCache 解析失败,当天过期 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
 
@@ -77,18 +77,18 @@ public class StockComponent {
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
             if (currentTime < expireComponent.getTimestampOfOpenAM()) {
-                log.info("stockCache 缓存到上午开盘 code-{}", key);
+                log.info("stockCache 缓存到上午开盘 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfOpenAM() - currentTime);
             }
             if (currentTime < expireComponent.getTimestampOfClosePM()) {
-                log.info("stockCache 缓存一分钟 code-{}", key);
+                log.info("stockCache 缓存一分钟 code {}", key);
                 return TimeUnit.MINUTES.toNanos(1);
             }
             if (currentTime - expireComponent.getTimestampOfClosePM() > 60 && stockDTO.getDate().toLocalDate().equals(LocalDate.now())) {
-                log.info("stockCache 缓存至当日结束 code-{}", key);
+                log.info("stockCache 缓存至当日结束 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
-            log.info("stockCache 未命中任何策略 缓存五分钟 code-{}", key);
+            log.info("stockCache 未命中任何策略 缓存五分钟 code {}", key);
             return TimeUnit.MINUTES.toNanos(5); // 设置缓存过期时间为5分钟
         }
 
@@ -132,28 +132,25 @@ public class StockComponent {
         public long expireAfterCreate(KLineRequest key, KLineDTO value, long currentTime) {
             currentTime = System.currentTimeMillis() / 1000;
             if (value.getRequestFail() == 1) {
-                log.error("KLineDTO 请求失败,五分钟后过期 code-{}", key);
+                log.error("KLineDTO 请求失败,五分钟后过期 code {}", key);
                 return TimeUnit.MINUTES.toNanos(5);
             }
             if (value.getResolveFail() == 1) {
-                log.error("KLineDTO 解析失败,当天过期 code-{}", key);
+                log.error("KLineDTO 解析失败,当天过期 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
             if (LocalDate.now().getDayOfWeek().getValue() > 5) {
+                log.error("KLineDTO 周末,当天过期 code {}", key);
                 return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
             }
-            if (currentTime < expireComponent.getTimestampOfOpenPM()) {
-                log.info("KLineDTO 缓存到下午收盘 code-{}", key);
-                return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfOpenPM() - currentTime);
-            }
-            if(currentTime - expireComponent.getTimestampOfClosePM() > 60 && value.getLastData() != null){
+            if(value.getLastData() != null){
                 if(LocalDate.parse(value.getLastData()[0]).compareTo(LocalDate.now()) == 0){
-                    log.info("KLineDTO 缓存至当日结束 code-{}", key);
+                    log.info("KLineDTO 缓存至当日结束 code {}", key);
                     return TimeUnit.SECONDS.toNanos(expireComponent.getTimestampOfDayEnd() - currentTime);
                 }
             }
-            log.info("KLineDTO 未命中任何策略 缓存二十分钟 code-{}", key);
-            return TimeUnit.MINUTES.toNanos(20); // 设置缓存过期时间为5分钟
+            log.info("KLineDTO 未命中任何策略 缓存二十分钟 code {}", key);
+            return TimeUnit.MINUTES.toNanos(30); // 设置缓存过期时间为5分钟
         }
 
         @Override

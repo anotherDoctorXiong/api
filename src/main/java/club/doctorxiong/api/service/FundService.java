@@ -128,7 +128,7 @@ public class FundService {
     }
 
     public PageData<FundDTO> getFundRank(FundRankRequest request) {
-        PageData<FundDTO> stockRank = fundComponent.fundRankCache.get(request);
+        PageData<FundDTO> stockRank = fundComponent.getFundRank(request);
         stockRank.getRank().forEach(fundShowDataDTO -> {
             fundShowDataDTO.setExpectData(getFundExpect(fundShowDataDTO.getCode()));
         });
