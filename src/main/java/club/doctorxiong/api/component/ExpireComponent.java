@@ -77,23 +77,23 @@ public class ExpireComponent {
         switch (key) {
             case OPEN_AM:
                 timestamp = LocalDateTime.now().withHour(9).withMinute(30).withSecond(0).withNano(0).toEpochSecond(ZoneOffset.ofHours(8));
-                log.info(OPEN_AM + timestamp);
+                log.info(OPEN_AM +"-"+ timestamp);
                 break;
             case CLOSE_AM:
                 timestamp = LocalDateTime.now().withHour(11).withMinute(30).withSecond(0).withNano(0).toEpochSecond(ZoneOffset.ofHours(8));
-                log.info(CLOSE_AM + timestamp);
+                log.info(CLOSE_AM +"-"+ timestamp);
                 break;
             case OPEN_PM:
                 timestamp = LocalDateTime.now().withHour(13).withMinute(0).withSecond(0).withNano(0).toEpochSecond(ZoneOffset.ofHours(8));
-                log.info(OPEN_PM + timestamp);
+                log.info(OPEN_PM +"-"+ timestamp);
                 break;
             case CLOSE_PM:
                 timestamp = LocalDateTime.now().withHour(15).withMinute(0).withSecond(0).withNano(0).toEpochSecond(ZoneOffset.ofHours(8));
-                log.info(CLOSE_PM + timestamp);
+                log.info(CLOSE_PM +"-"+ timestamp);
                 break;
             case DAY_END:
                 timestamp = LocalDateTime.now().toLocalDate().atTime(LocalTime.MAX).toEpochSecond(ZoneOffset.ofHours(8));
-                log.info(DAY_END + timestamp);
+                log.info(DAY_END +"-"+ timestamp);
                 break;
             default:
                 log.error(String.format("getTimestamp error key{%s}", key));
